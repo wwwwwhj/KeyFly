@@ -1,16 +1,82 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-06T09:00:00Z",
+  "generatedAt": "2026-11-06T09:40:54.8369967Z",
   "title": "Design System: 键走如飞",
   "extensions": {
-    "shadows": [{ "name": "keyboard-lift", "value": "0 8px 24px #10281d18", "purpose": "键盘抬起" }],
-    "motion": [{ "name": "key-return", "value": "220ms cubic-bezier(.2,1.7,.4,1)", "purpose": "键程回弹" }],
-    "breakpoints": [{ "name": "mobile", "value": "700px" }]
+    "shadows": [
+      {
+        "name": "keyboard-lift",
+        "value": "0 8px 24px #10281d18",
+        "purpose": "键盘抬起"
+      }
+    ],
+    "motion": [
+      {
+        "name": "key-return",
+        "value": "220ms cubic-bezier(.2,1.7,.4,1)",
+        "purpose": "键程回弹"
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile",
+        "value": "700px"
+      }
+    ]
   },
   "components": [
-    { "name": "主按钮", "kind": "button", "refersTo": "button-primary", "description": "开始下一次练习", "html": "<button class=\"ds-primary\">再练一次</button>", "css": ".ds-primary{background:var(--accent,#21684b);color:var(--surface,#fcfefd);border:0;border-radius:8px;padding:9px 16px;font:600 14px system-ui;min-height:42px;cursor:pointer}.ds-primary:hover{filter:brightness(.92)}.ds-primary:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}" },
-    { "name": "练习输入", "kind": "input", "description": "原生文本输入保留 IME", "html": "<textarea class=\"ds-input\" aria-label=\"练习输入\" placeholder=\"从第一个字开始…\"></textarea>", "css": ".ds-input{padding:10px 14px;background:var(--ground,#edf3f0);color:var(--ink,#203b32);border:1px solid var(--line,#cbd9d0);border-radius:9px;font:14px system-ui;caret-color:var(--accent,#21684b)}.ds-input:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}" },
-    { "name": "按键", "kind": "custom", "description": "正确输入与机械键程", "html": "<span class=\"ds-key\">F</span>", "css": ".ds-key{display:inline-flex;align-items:center;justify-content:center;width:48px;height:34px;background:#a6e7ba;color:#142a1c;border:1px solid #a6e7ba;border-bottom:3px solid #0c1c13;border-radius:5px;font:11px system-ui}" }
+    {
+      "name": "主按钮",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "开始下一次练习",
+      "html": "<button class=\"ds-button ds-primary\">再练一次</button>",
+      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-primary{background: var(--accent,#21684b); color: var(--surface,#fcfefd); border-color: var(--accent,#21684b); font-weight: 600;}.ds-button.ds-primary:hover:not(:disabled){filter: brightness(.92); background: var(--accent,#21684b);}"
+    },
+    {
+      "name": "普通按钮",
+      "kind": "button",
+      "description": "次要练习操作",
+      "html": "<button class=\"ds-button\">重新开始</button>",
+      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}"
+    },
+    {
+      "name": "文字按钮",
+      "kind": "button",
+      "description": "工具栏辅助操作",
+      "html": "<button class=\"ds-button ds-text\">换一篇</button>",
+      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-text{background: transparent; border-color: transparent; color: var(--muted,#566e63);}"
+    },
+    {
+      "name": "练习输入",
+      "kind": "input",
+      "description": "原生文本输入保留 IME",
+      "html": "<textarea class=\"ds-input\" aria-label=\"练习输入\" placeholder=\"从第一个字开始…\"></textarea>",
+      "css": ".ds-input{display: block; width: 100%; resize: vertical; min-height: 86px; max-height: 180px; padding: 14px 16px; line-height: 1.7; border: 1px solid var(--line,#cbd9d0); background: var(--ground,#edf3f0); color: var(--ink,#203b32); caret-color: var(--accent,#21684b); border-radius: 9px;}.ds-input{min-height: 58px; height: 58px; padding: 10px 14px;}.ds-input::placeholder{color: var(--muted,#566e63);}.ds-input:disabled{opacity: .7;}.ds-input{font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-input:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}"
+    },
+    {
+      "name": "功能导航",
+      "kind": "nav",
+      "description": "直角导航按钮以底部下划线标识当前页面",
+      "html": "<nav class=\"ds-nav\" aria-label=\"主要功能\"><button class=\"ds-button\" aria-current=\"page\">自由练习</button><button class=\"ds-button\">个人排行</button><button class=\"ds-button\">练习记录</button></nav>",
+      "css": ".ds-nav{display: flex; align-items: center; gap: 6px; padding: 0 max(24px, calc((100% - 1120px) / 2)); border-bottom: 1px solid var(--line,#cbd9d0); background: var(--surface,#fcfefd);}.ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-nav .ds-button{background: transparent; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 17px 20px 14px; white-space: nowrap; color: var(--muted,#566e63);}.ds-nav .ds-button[aria-current]{color: var(--accent,#21684b); border-bottom-color: var(--accent,#21684b); font-weight: 650;}"
+    },
+    {
+      "name": "按键",
+      "kind": "custom",
+      "description": "键帽下缘表现机械键程，按下与对错状态来自真实击键",
+      "html": "<span class=\"ds-key\">F</span>",
+      "css": ".ds-key{display: flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 0; height: 34px; background: #254034; border: 1px solid #42604d; border-bottom: 3px solid #0c1c13; border-radius: 5px; font-size: 11px; color: #cfdfd4; transition: background .16s ease-out, transform .22s cubic-bezier(.2,1.7,.4,1), box-shadow .22s ease-out;}.ds-key{width:48px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:11px;}.ds-key.ds-next{border-color: #a6e7ba; color: #b9f4cc;}.ds-key.ds-held{transform: translateY(2px) scale(.97); background: #46634e; border-bottom-width: 1px; transition-duration: .04s;}.ds-key.ds-correct{background: #a6e7ba; border-color: #a6e7ba; color: #142a1c;}.ds-key.ds-error{background: #6c3345; border-color: #ff9cad; color: #ffe8ed;}@media(prefers-reduced-motion:reduce){.ds-key{transition:none}}"
+    }
   ],
-  "narrative": { "northStar": "速度在指尖可见", "overview": "专注练习、实体键程、随速度升级的真实击键特效。", "dos": ["输入与动效解耦", "尊重减少动态效果"], "donts": ["不要伪造社区排名", "不要让特效抢占输入焦点"] }
+  "narrative": {
+    "overview": "以专注练习为基础，以跟手的键盘反馈为核心。视觉承诺来自用户：键盘反馈是重中之重，速度越快，特效越强。深绿键盘区提供稳定的视觉承载，练习区跟随平台深浅主题。",
+    "dos": [
+      "保持输入、统计与动画解耦；核心交互必须支持键盘和中文输入法。",
+      "任何新增效果都需要在隐藏、暂停、重置、卸载与减少动态效果时正确停止。"
+    ],
+    "donts": [
+      "不要为了特效打断输入焦点，不要把本地成绩称为社区排名。"
+    ]
+  }
 }

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "src/styles.css"
+        ],
+        "createdAt": "2026-11-06T09:38:49.688Z",
+        "reason": "Agent: src/styles.css:29 sets border-radius:0 for navigation underlines; line 104 models physical keycap depth, explicitly documented in DESIGN.md Elevation & Depth and Shapes. Neither is a rounded card accent."
+      }
+    ]
+  }
+}
