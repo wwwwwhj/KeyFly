@@ -1,0 +1,23 @@
+export interface Counts { attempts: number; mistakes: number }
+export function countInput(previous: string, next: string, target: string, counts: Counts): Counts {
+  const before = Array.from(previous), after = Array.from(next), expected = Array.from(target);
+  let prefix = 0;
+  while (prefix < before.length && prefix < after.length && before[prefix] === after[prefix]) prefix++;
+  // 回退不抹除历史错误；IME 提交多个汉字时逐字计数，删除不算击键。
+  const inserted = after.slice(prefix);
+  return { attempts: counts.attempts + inserted.length,
+    mistakes: counts.mistakes + inserted.filter((char, index) => char !== expected[prefix + index]).length };
+}
+export function metrics(text: string, target: string, elapsedMs: number, counts: Counts) {
+  const expected = Array.from(target), actual = Array.from(text);
+  const correct = actual.filter((char, index) => char === expected[index]).length;
+  const minutes = elapsedMs / 60000;
+  return { cpm: minutes > 0 ? Math.round(correct / minutes) : 0,
+    wpm: minutes > 0 ? Math.round(correct / 5 / minutes) : 0,
+    accuracy: counts.attempts ? Math.round((counts.attempts - counts.mistakes) / counts.attempts * 100) : 100,
+    progress: expected.length ? Math.round(correct / expected.length * 100) : 0, correct };
+}
+export function elapsedAt(started: number | null, accumulated: number, now: number, limitMs: number) {
+  const elapsed = accumulated + (started === null ? 0 : Math.max(0, now - started));
+  return limitMs ? Math.min(limitMs, elapsed) : elapsed;
+}
