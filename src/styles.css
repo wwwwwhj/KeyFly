@@ -49,7 +49,7 @@ select, input { color: var(--ink); background: var(--surface); border: 1px solid
 .metrics strong small { font-size: 17px; margin-left: 3px; }
 .metrics span { color: var(--muted); font-size: 13px; }
 .metrics > p { margin-left: auto; font-size: 13px; }
-.passage { font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', monospace; font-size: clamp(22px, 2.25vw, 29px); line-height: 1.9; padding: 28px 0; max-height: 280px; overflow: auto; overflow-wrap: anywhere; color: var(--muted); white-space: pre-wrap; }
+.passage { font-family: 'Cascadia Code', 'Consolas', 'Microsoft YaHei', monospace; font-size: clamp(22px, 2.25vw, 29px); line-height: 1.9; margin: 28px 0; max-height: 7.6em; overflow: auto; overflow-wrap: anywhere; color: var(--muted); white-space: pre-wrap; }
 .char-correct { color: var(--accent); }
 .char-error { color: var(--error); background: var(--error-bg); text-decoration: underline; text-underline-offset: 5px; }
 .char-caret { position: relative; }
@@ -78,8 +78,38 @@ footer { display: flex; justify-content: space-between; gap: 16px; border-top: 1
   main { padding: 28px 16px 40px; }.section-heading { margin-bottom: 22px; align-items: flex-start; }.section-heading .status { margin-top: 10px; font-size: 11px; }.section-heading p { font-size: 12px; }
   .practice-toolbar { gap: 12px; }.practice-toolbar > .text-button { margin-left: 0; padding-left: 0; font-size: 13px; }.workspace { padding: 20px 18px; }
   .metrics { gap: 16px; justify-content: space-between; }.metrics > div { display: block; }.metrics strong { font-size: 27px; }.metrics span { display: block; font-size: 11px; }.metrics > p { display: none; }
-  .passage { max-height: 260px; padding: 24px 0; font-size: 23px; line-height: 1.8; }.input-label { flex-direction: column; gap: 4px; }
+  .passage { max-height: 7.2em; margin: 24px 0; font-size: 23px; line-height: 1.8; }.input-label { flex-direction: column; gap: 4px; }
   .result-banner { align-items: flex-start; flex-direction: column; }.account { font-size: 11px; }.practice-notes { gap: 8px; }footer { padding: 20px 16px; font-size: 11px; }
 }
 @media (prefers-reduced-motion: reduce) { *, *:before { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
 :root[data-motion='reduced'] *, :root[data-motion='reduced'] *:before { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+
+.avatar { width: 30px; height: 30px; object-fit: cover; border-radius: 50%; }
+.rank-best { color: var(--accent); font-weight: 700; }
+.records-note { font-size: 12px; margin-top: 18px; }
+
+
+/* 键盘占据主体验区，题面按整行滚动，输入框始终在键盘上方可见。 */
+.with-keyboard .section-heading { margin-bottom: 20px; }.with-keyboard h1 { font-size: clamp(25px, 2.5vw, 30px); }.with-keyboard .workspace { padding: 20px 28px; }.with-keyboard .metrics { padding-bottom: 12px; }.with-keyboard .metrics strong { font-size: 27px; }.with-keyboard .passage { font-size: 25px; line-height: 1.65; max-height: 3.3em; margin: 18px 0; }.with-keyboard .typing-input { min-height: 58px; height: 58px; padding: 10px 14px; }.with-keyboard .progress-row { margin-top: 12px; }
+.keyboard-switch { display: flex; align-items: center; gap: 22px; margin: 10px 0 6px; color: var(--muted); font-size: 12px; }.keyboard-switch > span { margin-left: auto; }
+.keyboard-switch label { display: flex; align-items: center; min-height: 40px; gap: 8px; cursor: pointer; }.keyboard-switch input { accent-color: var(--accent); width: 16px; height: 16px; margin: 0; }
+.keyboard-panel { --spark: #a6e7ba; max-width: 900px; margin: 0 auto; padding: 16px 24px 12px; border-radius: 16px; background: #13291f; color: #d3e9da; box-shadow: 0 8px 24px #10281d18; }
+.keyboard-panel[data-tier='1'] { --spark: #a6e7ba; }.keyboard-panel[data-tier='2'] { --spark: #68e8e4; }.keyboard-panel[data-tier='3'] { --spark: #f6d879; }
+.keyboard-caption { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; font-size: 12px; color: #b4d1bf; }.energy-title { color: var(--spark); font-weight: 650; transition: color .3s ease-out; }.energy-title small { font-weight: 400; margin-left: 12px; color: #9fbbab; font-size: 11px; }
+.heat-meter { display: flex; align-items: center; gap: 3px; font-variant-numeric: tabular-nums; }.heat-meter > span { margin-right: 6px; font-size: 11px; }.heat-meter i { display: block; width: 4px; height: 12px; background: #3d5848; border-radius: 2px; transition: background .15s ease-out; }.heat-meter i.lit { background: var(--spark); }
+.keyboard-stage { position: relative; padding: 8px 4px; isolation: isolate; overflow: hidden; border-radius: 10px; }
+.keyboard-stage:before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, #5ae9d028, transparent 72%); opacity: 0; transition: opacity .3s ease-out; pointer-events: none; z-index: -1; }
+.keyboard-panel[data-tier='2'] .keyboard-stage:before { opacity: .7; }.keyboard-panel[data-tier='3'] .keyboard-stage:before { opacity: 1; background: radial-gradient(ellipse at 50% 100%, #e8c85a30, transparent 72%); }
+.keyboard { display: grid; gap: 5px; user-select: none; position: relative; }.keyboard-row { display: flex; justify-content: center; gap: 5px; }
+.keyboard-key { display: flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 0; height: 34px; background: #254034; border: 1px solid #42604d; border-bottom: 3px solid #0c1c13; border-radius: 5px; font-size: 11px; color: #cfdfd4; transition: background .16s ease-out, transform .22s cubic-bezier(.2,1.7,.4,1), box-shadow .22s ease-out; }
+.keyboard-key[data-width='wide'] { flex-grow: 1.6; font-size: 9px; }.keyboard-key[data-width='shift'] { flex-grow: 2.1; }.keyboard-key[data-width='space'] { flex: 0 1 50%; height: 28px; font-size: 10px; }
+.keyboard-key.next { border-color: #a6e7ba; color: #b9f4cc; }.keyboard-key.held { transform: translateY(2px) scale(.97); background: #46634e; border-bottom-width: 1px; transition-duration: .04s; }.keyboard-key.correct { background: #a6e7ba; border-color: #a6e7ba; color: #142a1c; }.keyboard-key.error { background: #6c3345; border-color: #ff9cad; color: #ffe8ed; }
+.keyboard-panel[data-tier='2'] .keyboard-key.held { box-shadow: 0 2px 16px #68e8e499; }.keyboard-panel[data-tier='3'] .keyboard-key.held { box-shadow: 0 3px 22px #f6d879b3; transform: translateY(2px) scale(.95); }
+.key-particles { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; }
+.speed-trails { position: absolute; inset: 0; pointer-events: none; opacity: 0; overflow: hidden; }.speed-trails:before, .speed-trails:after { content: ''; position: absolute; height: 1px; width: 28%; background: linear-gradient(90deg, transparent, var(--spark), transparent); left: -30%; top: 35%; }
+.keyboard-panel[data-tier='2'] .speed-trails, .keyboard-panel[data-tier='3'] .speed-trails { opacity: .55; }.keyboard-panel[data-tier='2'] .speed-trails:before, .keyboard-panel[data-tier='3'] .speed-trails:before { animation: key-stream .8s linear infinite; }.keyboard-panel[data-tier='3'] .speed-trails:after { top: 76%; animation: key-stream .55s linear infinite reverse; }
+@keyframes key-stream { to { left: 110%; } }
+.keyboard-legend { text-align: center; font-size: 10px; margin-top: 8px; color: #a9c3b3; }
+@media (max-width: 700px) {
+  .keyboard-switch > span, .energy-title small { display: none; }.with-keyboard .workspace { padding: 18px; }.with-keyboard .passage { font-size: 22px; }.keyboard-panel { padding: 12px 8px 10px; border-radius: 12px; }.keyboard-stage { padding: 6px 0; }.keyboard-caption { padding: 0 4px; }.keyboard { gap: 4px; }.keyboard-row { gap: 3px; }.keyboard-key { height: 30px; font-size: 10px; border-radius: 4px; }.keyboard-key[data-width='wide'], .keyboard-key[data-width='shift'] { font-size: 7px; }.keyboard-key[data-width='space'] { height: 25px; }.keyboard-legend { font-size: 9px; text-wrap: balance; }
+}

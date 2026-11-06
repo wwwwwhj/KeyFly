@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T09:00:00Z",
+  "title": "Design System: 键走如飞",
+  "extensions": {
+    "shadows": [{ "name": "keyboard-lift", "value": "0 8px 24px #10281d18", "purpose": "键盘抬起" }],
+    "motion": [{ "name": "key-return", "value": "220ms cubic-bezier(.2,1.7,.4,1)", "purpose": "键程回弹" }],
+    "breakpoints": [{ "name": "mobile", "value": "700px" }]
+  },
+  "components": [
+    { "name": "主按钮", "kind": "button", "refersTo": "button-primary", "description": "开始下一次练习", "html": "<button class=\"ds-primary\">再练一次</button>", "css": ".ds-primary{background:var(--accent,#21684b);color:var(--surface,#fcfefd);border:0;border-radius:8px;padding:9px 16px;font:600 14px system-ui;min-height:42px;cursor:pointer}.ds-primary:hover{filter:brightness(.92)}.ds-primary:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}" },
+    { "name": "练习输入", "kind": "input", "description": "原生文本输入保留 IME", "html": "<textarea class=\"ds-input\" aria-label=\"练习输入\" placeholder=\"从第一个字开始…\"></textarea>", "css": ".ds-input{padding:10px 14px;background:var(--ground,#edf3f0);color:var(--ink,#203b32);border:1px solid var(--line,#cbd9d0);border-radius:9px;font:14px system-ui;caret-color:var(--accent,#21684b)}.ds-input:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}" },
+    { "name": "按键", "kind": "custom", "description": "正确输入与机械键程", "html": "<span class=\"ds-key\">F</span>", "css": ".ds-key{display:inline-flex;align-items:center;justify-content:center;width:48px;height:34px;background:#a6e7ba;color:#142a1c;border:1px solid #a6e7ba;border-bottom:3px solid #0c1c13;border-radius:5px;font:11px system-ui}" }
+  ],
+  "narrative": { "northStar": "速度在指尖可见", "overview": "专注练习、实体键程、随速度升级的真实击键特效。", "dos": ["输入与动效解耦", "尊重减少动态效果"], "donts": ["不要伪造社区排名", "不要让特效抢占输入焦点"] }
+}

@@ -3,8 +3,11 @@ export function countInput(previous: string, next: string, target: string, count
   const before = Array.from(previous), after = Array.from(next), expected = Array.from(target);
   let prefix = 0;
   while (prefix < before.length && prefix < after.length && before[prefix] === after[prefix]) prefix++;
+  let suffix = 0;
+  while (suffix < before.length - prefix && suffix < after.length - prefix && before[before.length - 1 - suffix] === after[after.length - 1 - suffix]) suffix++;
   // 回退不抹除历史错误；IME 提交多个汉字时逐字计数，删除不算击键。
-  const inserted = after.slice(prefix);
+  // 选区中间编辑时，未改动的尾部不是新输入，不能重复计入尝试次数。
+  const inserted = after.slice(prefix, after.length - suffix);
   return { attempts: counts.attempts + inserted.length,
     mistakes: counts.mistakes + inserted.filter((char, index) => char !== expected[prefix + index]).length };
 }

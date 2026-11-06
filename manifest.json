@@ -5,5 +5,5 @@
   "entry": "index.html",
   "script": "app.js",
   "style": "app.css",
-  "permissions": ["user.read", "theme.read", "storage.read", "storage.write", "network.websocket"]
+  "permissions": ["user.read", "theme.read", "storage.read", "storage.write"]
 }
