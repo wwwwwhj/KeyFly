@@ -1,0 +1,9 @@
+{
+  "format": 1,
+  "id": "01a1afee-b107-7509-aca8-736dfe02f6cc",
+  "version": "0.1.0",
+  "entry": "index.html",
+  "script": "app.js",
+  "style": "app.css",
+  "permissions": ["user.read", "theme.read", "storage.read", "storage.write", "network.websocket"]
+}
