@@ -53,6 +53,28 @@ async (page) => {
   await page.keyboard.press('Shift+ArrowRight');
   await page.keyboard.insertText(target[0]);
   check(await input.inputValue() === target.slice(0, 8), 'middle correction lost trailing input');
+
+  // 点击、Shift 点击与拖选都使用题面坐标，不能落入透明输入框自己的文字布局。
+  async function pointAt(index) {
+    const box = await page.locator(`[data-position="${index}"]`).boundingBox();
+    return { x: box.x + box.width * .2, y: box.y + box.height / 2 };
+  }
+  let point = await pointAt(3);
+  await page.mouse.click(point.x, point.y);
+  check(await input.evaluate(el => el.selectionStart) === 3, 'click missed visible character');
+  point = await pointAt(6);
+  await page.keyboard.down('Shift');
+  await page.mouse.click(point.x, point.y);
+  await page.keyboard.up('Shift');
+  check(await input.evaluate(el => el.selectionStart === 3 && el.selectionEnd === 6), 'Shift click missed visible range');
+  const from = await pointAt(7), to = await pointAt(2);
+  await page.mouse.move(from.x, from.y);
+  await page.mouse.down();
+  await page.mouse.move(to.x, to.y, { steps: 5 });
+  await page.mouse.up();
+  check(await input.evaluate(el => el.selectionStart === 2 && el.selectionEnd === 7 && el.selectionDirection === 'backward'), 'backward drag moved its own target');
+  await page.keyboard.insertText(target.slice(2, 7));
+  check(await input.inputValue() === target.slice(0, 8), 'mouse-selected correction lost text');
   await page.getByRole('button', { name: '练习记录', exact: true }).click();
   await page.locator('.status-paused').waitFor();
   check(await page.locator('.status').textContent() === '已暂停', 'records did not pause practice');
