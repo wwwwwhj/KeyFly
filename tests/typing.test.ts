@@ -3,6 +3,23 @@ import assert from 'node:assert/strict';
 import { countInput, elapsedAt, metrics } from '../src/typing.ts';
 import { parseHistory, rankedHistory, type Result } from '../src/history.ts';
 import { hintCodes, typingEnergy } from '../src/keyboard-layout.ts';
+import { passages, passageSegments } from '../src/content.ts';
+
+test('英文题库逐词释义完整，注释不改变题面、空白或字符偏移', () => {
+  for (const passage of passages.en) {
+    const words = passage.text.match(/\S+/gu) ?? [];
+    assert.equal(passage.translations?.length, words.length, passage.title);
+    const segments = passageSegments(passage.text, passage.translations);
+    assert.equal(segments.map(segment => segment.text).join(''), passage.text);
+    assert.equal(segments.filter(segment => /\p{Script=Han}/u.test(segment.translation)).length, words.length);
+    for (const segment of segments) assert.equal(Array.from(passage.text).slice(segment.start, segment.start + Array.from(segment.text).length).join(''), segment.text);
+  }
+  assert.deepEqual(passageSegments("A  bird's\t😀!", ['一只', '鸟的', '笑脸']), [
+    { text: 'A', start: 0, translation: '一只' }, { text: '  ', start: 1, translation: '' },
+    { text: "bird's", start: 3, translation: '鸟的' }, { text: '\t', start: 9, translation: '' },
+    { text: '😀!', start: 10, translation: '笑脸' },
+  ]);
+});
 test('中文组合输入、退格和纠错保留真实准确率', () => {
   const target = '键走如飞';
   let counts = countInput('', '键走入', target, { attempts: 0, mistakes: 0 });

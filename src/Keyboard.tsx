@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { hintCodes, keyRows, typingEnergy, type KeyFeedback } from './keyboard-layout';
 import { createKeyboardEffects } from './keyboard-effects';
 
-export function Keyboard({ nextChar, feedback, active, effects }: { nextChar: string; feedback: KeyFeedback | null; active: boolean; effects: boolean }) {
+export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, effects }: { nextChar: string; feedback: KeyFeedback | null; active: boolean; effects: boolean }) {
   const [held, setHeld] = useState<Set<string>>(new Set());
   const [flash, setFlash] = useState<KeyFeedback | null>(null);
   const [energy, setEnergy] = useState(0);
@@ -37,7 +37,7 @@ export function Keyboard({ nextChar, feedback, active, effects }: { nextChar: st
     renderer.current?.burst(rect.left - area.left + rect.width / 2, rect.top - area.top + rect.height / 2, energyRef.current, color, wrong);
   }
   useEffect(() => {
-    if (!active) { setHeld(new Set()); setEnergy(0); setTier(0); energyRef.current = 0; strokes.current = []; return; }
+    if (!active) { setHeld(new Set()); setFlash(null); setEnergy(0); setTier(0); energyRef.current = 0; strokes.current = []; return; }
     function down(event: KeyboardEvent) {
       // 只反馈练习输入框，导航与设置不亮键；Tab 等控制键保留原生行为。
       if (!(event.target instanceof HTMLTextAreaElement) || !event.target.classList.contains('typing-input') || event.ctrlKey || event.metaKey || event.altKey) return;
@@ -46,7 +46,8 @@ export function Keyboard({ nextChar, feedback, active, effects }: { nextChar: st
         strokes.current.push(performance.now());
         const next = typingEnergy(strokes.current, performance.now());
         strokes.current = next.recent; energyRef.current = next.energy;
-        setEnergy(next.energy); setTier(next.tier); burst(event.code);
+        // 按下只更新键程与热度；粒子等输入校验后触发，错键不会先闪正确色。
+        setEnergy(next.energy); setTier(next.tier);
       }
     }
     function up(event: KeyboardEvent) { setHeld(previous => { const next = new Set(previous); next.delete(event.code); return next; }); }
@@ -68,7 +69,7 @@ export function Keyboard({ nextChar, feedback, active, effects }: { nextChar: st
   }, [feedback]);
 
   return <div className="keyboard-panel" data-tier={effects && !reduced ? tier : 0}>
-    <div className="keyboard-caption"><span className="energy-title">{['准备起飞', '进入节奏', '疾速流光', '超频时刻'][tier]}<small>{reduced ? '已减少动态效果' : '速度越快，反馈越强'}</small></span>
+    <div className="keyboard-caption"><span className="energy-title">{['键盘', '节奏', '疾速', '超频'][effects && !reduced ? tier : 0]}</span>
       <span className="heat-meter" aria-label={`敲击热度 ${Math.round(energy * 100)}%`}><span>{energy === 1 ? '10+' : (energy * 10).toFixed(1)} 击/秒</span>{Array.from({ length: 10 }, (_, i) => <i key={i} className={i < Math.ceil(energy * 10) ? 'lit' : ''} />)}</span>
     </div>
     <div ref={stage} className="keyboard-stage" aria-hidden="true">
@@ -78,6 +79,5 @@ export function Keyboard({ nextChar, feedback, active, effects }: { nextChar: st
       )}</div>)}</div>
       <canvas ref={canvas} className="key-particles" />
     </div>
-    <p className="keyboard-legend">描边提示下一键 · 绿为正确 / 红为错误 · 中文组词不判错</p>
   </div>;
-}
+});

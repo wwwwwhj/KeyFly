@@ -1,19 +1,27 @@
 import { useEffect, useRef, useState } from 'react';
 import { Practice } from './Practice';
 import { parseHistory, rankedHistory, type Result } from './history';
-import { readStorage, writeStorage, sdk, type User } from './platform';
-import type { Language } from './content';
+import { readStorage, writeStorage, type User } from './platform';
+import { DurationSwitch } from './DurationSwitch';
 
 export function App({ user }: { user: User | null }) {
-  const [tab, setTab] = useState('practice');
+  const [panel, setPanel] = useState<'ranking' | 'history' | null>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
   const [history, setHistory] = useState<Result[]>([]);
-  const [language, setLanguage] = useState<Language>('en');
   const [duration, setDuration] = useState(60);
   const [storageError, setStorageError] = useState('');
   const loaded = useRef(false);
   const historyRef = useRef<Result[]>([]);
   const queue = useRef(Promise.resolve());
   const key = `history.${user?.id ?? 'guest'}`;
+  useEffect(() => {
+    // 原生模态框负责焦点约束、Esc 关闭和关闭后的焦点恢复。
+    if (panel) dialog.current?.showModal();
+    else dialog.current?.close();
+    const previousOverflow = document.body.style.overflow;
+    if (panel) document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [panel]);
   useEffect(() => {
     let active = true;
     readStorage(key).then(raw => {
@@ -43,50 +51,38 @@ export function App({ user }: { user: User | null }) {
         .catch(() => setStorageError('记录保存失败。本次成绩仍在页面中；请检查浏览器存储权限后再练习。'));
     }
   }
-  const records = tab === 'ranking' ? rankedHistory(history, language, duration) : history;
+  const records = panel === 'ranking' ? rankedHistory(history, 'en', duration) : history;
+  const username = user?.username || user?.name || '访客';
   return <div className="app-shell">
-    <header className="app-header">
-      <a className="brand" href="#" onClick={e => { e.preventDefault(); setTab('practice'); }} aria-label="键走如飞首页">
-        <svg viewBox="0 0 40 40" aria-hidden="true"><path d="M9 8v24M12 21 29 8M12 21l17 11M23 17h10M27 23h8" /></svg>
-        <span>键走如飞<small>KeyFly</small></span>
-      </a>
-      <span className="account">
-        {user?.avatarUrl ? <img className="avatar" src={user.avatarUrl} alt="" /> : <span className="online-dot" />}
-        {user?.name || user?.username || (sdk ? '访客练习' : '本地开发')}
-      </span>
-    </header>
-    <nav className="main-nav" aria-label="主要功能">
-      <button aria-current={tab === 'practice' ? 'page' : undefined} onClick={() => setTab('practice')}>自由练习</button>
-      <button aria-current={tab === 'ranking' ? 'page' : undefined} onClick={() => setTab('ranking')}>个人排行</button>
-      <button aria-current={tab === 'history' ? 'page' : undefined} onClick={() => setTab('history')}>练习记录</button>
-      <span>让每一次敲击，都向前一点。</span>
-    </nav>
     <main>
+      <div className="app-toolbar">
+        <div className="record-actions">
+          <button className="text-button" aria-haspopup="dialog" onClick={() => setPanel('ranking')}>个人排行</button>
+          <button className="text-button" aria-haspopup="dialog" onClick={() => setPanel('history')}>练习记录</button>
+        </div>
+        <div className="account" aria-label="当前社区用户">
+          {user?.avatarUrl ? <img className="avatar" src={user.avatarUrl} alt="" /> : <span className="avatar avatar-fallback" aria-hidden="true">{Array.from(username)[0]}</span>}
+          <span title={username}>{username}</span>
+        </div>
+      </div>
       {storageError && <p className="notice" role="alert">{storageError}</p>}
-      <div hidden={tab !== 'practice'}><Practice onResult={onResult} active={tab === 'practice'} /></div>
-      {tab !== 'practice' && <section>
-        <div className="section-heading"><div>
-          <h1>{tab === 'ranking' ? '和更好的自己，见面。' : '看见自己的进步。'}</h1>
-          <p>{tab === 'ranking' ? '最近 20 次练习中的个人排名，按同语言、同设定时长比较。此榜单仅属于你。' : '最近 20 次成绩，保存在当前浏览器与当前账号下。'}</p>
-        </div></div>
-        {tab === 'ranking' && <div className="practice-toolbar">
-          <div className="segmented" aria-label="排行语言">
-            <button aria-pressed={language === 'zh'} onClick={() => setLanguage('zh')}>中文</button>
-            <button aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button>
-          </div>
-          <label>设定时长 <select value={duration} onChange={e => setDuration(Number(e.target.value))}>
-            <option value={30}>30 秒</option><option value={60}>60 秒</option><option value={120}>120 秒</option><option value={0}>完整短文</option>
-          </select></label>
-        </div>}
+      <Practice onResult={onResult} active={panel === null} />
+      <dialog ref={dialog} className="records-dialog" aria-labelledby="records-title" onClose={() => setPanel(null)}>
+        <div className="dialog-heading">
+          <h2 id="records-title">{panel === 'ranking' ? '个人排行' : '练习记录'}</h2>
+          <button className="icon-button" aria-label="关闭弹窗" title="关闭" autoFocus onClick={() => setPanel(null)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" /></svg></button>
+        </div>
+        <p className="dialog-description">{panel === 'ranking' ? '最近 20 次练习中的英文个人排名，按设定时长比较。' : '最近 20 次成绩，保存在当前浏览器与当前账号下。'}</p>
+        {panel === 'ranking' && <div className="practice-toolbar"><DurationSwitch value={duration} onChange={setDuration} /></div>}
         {records.length === 0 ? <div className="empty">
-          <h2>{tab === 'ranking' && history.length ? '这个分组，还等着你的第一场。' : '第一段记录，从这里开始。'}</h2>
+          <h3>{panel === 'ranking' && history.length ? '这个分组还没有成绩' : '还没有练习记录'}</h3>
           <p>完成一次练习，就能在这里查看速度和准确率。</p>
-          <button className="primary" onClick={() => setTab('practice')}>开始练习</button>
+          <button className="primary" onClick={() => setPanel(null)}>返回练习</button>
         </div> : <div className="table-wrap"><table>
-          <caption className="sr-only">{tab === 'ranking' ? '个人成绩排行' : '最近练习成绩'}</caption>
-          <thead><tr>{tab === 'ranking' && <th>名次</th>}<th>时间</th><th>语言</th><th>速度</th><th>准确率</th><th>用时 / 设定</th></tr></thead>
+          <caption className="sr-only">{panel === 'ranking' ? '个人成绩排行' : '最近练习成绩'}</caption>
+          <thead><tr>{panel === 'ranking' && <th>名次</th>}<th>时间</th><th>语言</th><th>速度</th><th>准确率</th><th>用时 / 设定</th></tr></thead>
           <tbody>{records.map((r, i) => <tr key={`${r.at}-${i}`}>
-            {tab === 'ranking' && <td><span className={i === 0 ? 'rank-best' : ''}>{i + 1}</span></td>}
+            {panel === 'ranking' && <td><span className={i === 0 ? 'rank-best' : ''}>{i + 1}</span></td>}
             <td>{new Date(r.at).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</td>
             <td>{r.language === 'zh' ? '中文' : 'English'}</td>
             <td>{r.language === 'zh' ? `${r.cpm} 字/分` : `${r.wpm} WPM`}</td><td>{r.accuracy}%</td>
@@ -94,8 +90,8 @@ export function App({ user }: { user: User | null }) {
           </tr>)}</tbody>
         </table></div>}
         <p className="records-note">记录不会跨设备同步；清除浏览器数据后，本地记录可能丢失。</p>
-      </section>}
+      </dialog>
     </main>
-    <footer><span>键走如飞 · KeyFly</span><span>专注当下，自有回响。</span></footer>
+    <footer>键走如飞 · KeyFly</footer>
   </div>;
 }

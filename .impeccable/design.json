@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-06T09:40:54.8369967Z",
+  "generatedAt": "2026-11-07T14:37:41.2280950Z",
   "title": "Design System: 键走如飞",
   "extensions": {
     "shadows": [
@@ -31,48 +31,48 @@
       "refersTo": "button-primary",
       "description": "开始下一次练习",
       "html": "<button class=\"ds-button ds-primary\">再练一次</button>",
-      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-primary{background: var(--accent,#21684b); color: var(--surface,#fcfefd); border-color: var(--accent,#21684b); font-weight: 600;}.ds-button.ds-primary:hover:not(:disabled){filter: brightness(.92); background: var(--accent,#21684b);}"
+      "css": ".ds-button{cursor: pointer; border: 0; border-radius: 8px; padding: 9px 16px; background: transparent; color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-primary{background: var(--accent,#21684b); color: var(--surface,#fcfefd);  font-weight: 600;}.ds-button.ds-primary:hover:not(:disabled){filter: brightness(.92); background: var(--accent,#21684b);}"
     },
     {
-      "name": "普通按钮",
+      "name": "重来图标",
       "kind": "button",
-      "description": "次要练习操作",
-      "html": "<button class=\"ds-button\">重新开始</button>",
-      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}"
+      "description": "换一篇并重新开始，图标配有可访问名称与提示",
+      "html": "<button class=\"ds-restart\" aria-label=\"换一篇并重新开始\" title=\"换一篇 / 重新开始\"><svg viewBox=\"0 0 24 24\" aria-hidden=\"true\"><path d=\"M3 10a9 9 0 1 1 2.6 8.4M3 4v6h6\"/></svg></button>",
+      "css": ".ds-restart{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:10px;border:0;border-radius:8px;background:transparent;color:var(--ink,#203b32);cursor:pointer}.ds-restart svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.ds-restart:hover{background:var(--tint,#dcece3)}.ds-restart:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}"
     },
     {
       "name": "文字按钮",
       "kind": "button",
-      "description": "工具栏辅助操作",
-      "html": "<button class=\"ds-button ds-text\">换一篇</button>",
-      "css": ".ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-text{background: transparent; border-color: transparent; color: var(--muted,#566e63);}"
+      "description": "打开个人排行或练习记录弹窗",
+      "html": "<button class=\"ds-button ds-text\" aria-haspopup=\"dialog\">练习记录</button>",
+      "css": ".ds-button{cursor: pointer; border: 0; border-radius: 8px; padding: 9px 16px; background: transparent; color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-button.ds-text{background: transparent;  color: var(--muted,#566e63);}"
     },
     {
-      "name": "练习输入",
+      "name": "单行英文题面",
       "kind": "input",
-      "description": "原生文本输入保留 IME",
-      "html": "<textarea class=\"ds-input\" aria-label=\"练习输入\" placeholder=\"从第一个字开始…\"></textarea>",
-      "css": ".ds-input{display: block; width: 100%; resize: vertical; min-height: 86px; max-height: 180px; padding: 14px 16px; line-height: 1.7; border: 1px solid var(--line,#cbd9d0); background: var(--ground,#edf3f0); color: var(--ink,#203b32); caret-color: var(--accent,#21684b); border-radius: 9px;}.ds-input{min-height: 58px; height: 58px; padding: 10px 14px;}.ds-input::placeholder{color: var(--muted,#566e63);}.ds-input:disabled{opacity: .7;}.ds-input{font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-input:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}"
+      "description": "单行英文题面，每词上方标注中文释义；逐字滚动，当前字符居中",
+      "html": "<div class=\"ds-typing\"><div class=\"ds-passage\" aria-hidden=\"true\"><div class=\"ds-track\"><span class=\"ds-word\"><span class=\"ds-translation\" lang=\"zh-CN\">一</span><span class=\"ds-letters\" lang=\"en\"><span class=\"ds-caret\">A</span></span></span><span class=\"ds-word\"><span class=\"ds-translation\"></span><span class=\"ds-letters\"> </span></span><span class=\"ds-word\"><span class=\"ds-translation\" lang=\"zh-CN\">点</span><span class=\"ds-letters\" lang=\"en\">little</span></span></div></div><textarea class=\"ds-input\" aria-label=\"英文打字练习\" aria-description=\"A little practice every day.\"></textarea></div><p class=\"ds-hint\">点击文字开始输入 · Backspace 可修正</p>",
+      "css": ".ds-typing{position:relative;margin:24px 0 10px}.ds-hint{font:12px 'Segoe UI',system-ui,sans-serif;color:var(--muted,#566e63);text-align:center}.ds-typing:focus-within+.ds-hint{color:var(--accent,#21684b)}.ds-typing:focus-within+.ds-hint:before{content:'';display:inline-block;width:6px;height:6px;margin-right:8px;border-radius:50%;background:var(--accent,#21684b);vertical-align:middle}.ds-passage{font-family:'Cascadia Code','Consolas',monospace;font-size:32px;line-height:2.25;overflow:hidden;color:var(--pending,#748b7d);white-space:pre}.ds-track{width:max-content;min-width:100%;padding-inline:50%}.ds-caret{position:relative}.ds-caret:before{content:'';position:absolute;inset:0 auto 0 -2px;width:2px;background:var(--accent,#21684b)}.ds-input{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;resize:none;opacity:0;cursor:text}.ds-correct{color:var(--ink,#203b32)}.ds-error{color:var(--error,#a43243);background:var(--error-bg,#fbe4e7);text-decoration:underline}@media(max-width:700px){.ds-passage{font-size:26px}}.ds-word{display:inline-block;vertical-align:top;text-align:center;line-height:1.5}.ds-translation{display:block;min-height:1.35em;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:calc(1em - 2px);line-height:1.35;font-weight:400;color:var(--muted,#566e63)}.ds-letters{display:block}"
     },
     {
-      "name": "功能导航",
-      "kind": "nav",
-      "description": "直角导航按钮以底部下划线标识当前页面",
-      "html": "<nav class=\"ds-nav\" aria-label=\"主要功能\"><button class=\"ds-button\" aria-current=\"page\">自由练习</button><button class=\"ds-button\">个人排行</button><button class=\"ds-button\">练习记录</button></nav>",
-      "css": ".ds-nav{display: flex; align-items: center; gap: 6px; padding: 0 max(24px, calc((100% - 1120px) / 2)); border-bottom: 1px solid var(--line,#cbd9d0); background: var(--surface,#fcfefd);}.ds-button{cursor: pointer; border: 1px solid var(--line,#cbd9d0); border-radius: 8px; padding: 9px 16px; background: var(--surface,#fcfefd); color: var(--ink,#203b32); transition: background .16s ease-out;}.ds-button:hover:not(:disabled){background: var(--tint,#dcece3);}.ds-button:disabled{opacity: .55; cursor: not-allowed;}.ds-button{min-height:42px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:16px;}.ds-button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px;}.ds-nav .ds-button{background: transparent; border: 0; border-bottom: 3px solid transparent; border-radius: 0; padding: 17px 20px 14px; white-space: nowrap; color: var(--muted,#566e63);}.ds-nav .ds-button[aria-current]{color: var(--accent,#21684b); border-bottom-color: var(--accent,#21684b); font-weight: 650;}"
+      "name": "练习时长切换",
+      "kind": "custom",
+      "description": "以分段按钮切换 30 秒、60 秒、120 秒与全文",
+      "html": "<div class=\"ds-durations\" role=\"group\" aria-label=\"练习时长\"><button aria-pressed=\"false\">30 秒</button><button aria-pressed=\"true\">60 秒</button><button aria-pressed=\"false\">120 秒</button><button aria-pressed=\"false\">全文</button></div>",
+      "css": ".ds-durations{display:inline-flex;padding:3px;background:var(--tint,#dcece3);border-radius:10px}.ds-durations button{min-height:36px;padding:7px 16px;border:0;border-radius:8px;background:transparent;color:var(--muted,#566e63);font-size:13px;white-space:nowrap;cursor:pointer;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;}.ds-durations button[aria-pressed='true']{background:var(--surface,#fcfefd);color:var(--ink,#203b32);font-weight:600}.ds-durations button:hover:not(:disabled){background:var(--surface,#fcfefd)}.ds-durations button:focus-visible{outline:3px solid var(--accent,#21684b);outline-offset:3px}.ds-durations button:disabled{opacity:.55;cursor:not-allowed}"
     },
     {
       "name": "按键",
       "kind": "custom",
       "description": "键帽下缘表现机械键程，按下与对错状态来自真实击键",
       "html": "<span class=\"ds-key\">F</span>",
-      "css": ".ds-key{display: flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 0; height: 34px; background: #254034; border: 1px solid #42604d; border-bottom: 3px solid #0c1c13; border-radius: 5px; font-size: 11px; color: #cfdfd4; transition: background .16s ease-out, transform .22s cubic-bezier(.2,1.7,.4,1), box-shadow .22s ease-out;}.ds-key{width:48px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:11px;}.ds-key.ds-next{border-color: #a6e7ba; color: #b9f4cc;}.ds-key.ds-held{transform: translateY(2px) scale(.97); background: #46634e; border-bottom-width: 1px; transition-duration: .04s;}.ds-key.ds-correct{background: #a6e7ba; border-color: #a6e7ba; color: #142a1c;}.ds-key.ds-error{background: #6c3345; border-color: #ff9cad; color: #ffe8ed;}@media(prefers-reduced-motion:reduce){.ds-key{transition:none}}"
+      "css": ".ds-key{display: flex; align-items: center; justify-content: center; flex: 1 1 0; min-width: 0; height: 48px; background: #254034; border: 1px solid #42604d; border-bottom: 3px solid #0c1c13; border-radius: 5px; font-size: 13px; color: #cfdfd4; transition: background .16s ease-out, transform .22s cubic-bezier(.2,1.7,.4,1), box-shadow .22s ease-out;}.ds-key{width:64px;font-family:'Segoe UI','Microsoft YaHei',system-ui,sans-serif;font-size:13px;}.ds-key.ds-next{border-color: #a6e7ba; color: #b9f4cc;}.ds-key.ds-held{transform: translateY(2px) scale(.97); background: #46634e; border-bottom-width: 1px; transition-duration: .04s;}.ds-key.ds-correct{background: #a6e7ba; border-color: #a6e7ba; color: #142a1c;}.ds-key.ds-error{background: #6c3345; border-color: #ff9cad; color: #ffe8ed;}@media(prefers-reduced-motion:reduce){.ds-key{transition:none}}"
     }
   ],
   "narrative": {
     "overview": "以专注练习为基础，以跟手的键盘反馈为核心。视觉承诺来自用户：键盘反馈是重中之重，速度越快，特效越强。深绿键盘区提供稳定的视觉承载，练习区跟随平台深浅主题。",
     "dos": [
-      "保持输入、统计与动画解耦；核心交互必须支持键盘和中文输入法。",
+      "保持输入、统计与动画解耦；核心交互必须支持键盘和辅助技术。",
       "任何新增效果都需要在隐藏、暂停、重置、卸载与减少动态效果时正确停止。"
     ],
     "donts": [

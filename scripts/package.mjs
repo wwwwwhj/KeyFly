@@ -10,7 +10,7 @@ const result = await pack({
     'index.html': '<div id="root"></div>',
     'app.js': await readFile('dist/web/app.js'),
     'app.css': await readFile('dist/web/app.css'),
-    'strings.json': JSON.stringify({ name: '键走如飞', description: '中英文打字练习、计时挑战与个人成绩排行' }),
+    'strings.json': JSON.stringify({ name: '键走如飞', description: '英文打字练习、计时挑战与个人成绩排行' }),
   },
 });
 console.log(`已生成 ${result.file} (${result.size} bytes)`);
