@@ -13,6 +13,7 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
   const canvas = useRef<HTMLCanvasElement>(null);
   const renderer = useRef<ReturnType<typeof createKeyboardEffects> | null>(null);
   const energyRef = useRef(0);
+  const focused = useRef(false);
   const canAnimate = useRef(false);
   canAnimate.current = effects && !reduced && active;
   const hints = hintCodes(nextChar);
@@ -29,7 +30,7 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
   useEffect(() => { if (!canAnimate.current) renderer.current?.clear(); }, [effects, reduced, active]);
 
   function burst(code: string, wrong = false) {
-    if (!canAnimate.current || !stage.current) return;
+    if (!canAnimate.current || !focused.current || !stage.current) return;
     const key = [...stage.current.querySelectorAll<HTMLElement>('[data-code]')].find(el => el.dataset.code === code);
     if (!key) return;
     const rect = key.getBoundingClientRect(), area = stage.current.getBoundingClientRect();
@@ -37,10 +38,11 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
     renderer.current?.burst(rect.left - area.left + rect.width / 2, rect.top - area.top + rect.height / 2, energyRef.current, color, wrong);
   }
   useEffect(() => {
-    if (!active) { setHeld(new Set()); setFlash(null); setEnergy(0); setTier(0); energyRef.current = 0; strokes.current = []; return; }
+    if (!active) { focused.current = false; setHeld(new Set()); setFlash(null); setEnergy(0); setTier(0); energyRef.current = 0; strokes.current = []; return; }
     function down(event: KeyboardEvent) {
       // 只反馈练习输入框，导航与设置不亮键；Tab 等控制键保留原生行为。
       if (!(event.target instanceof HTMLTextAreaElement) || !event.target.classList.contains('typing-input') || event.ctrlKey || event.metaKey || event.altKey) return;
+      focused.current = true;
       setHeld(previous => new Set(previous).add(event.code));
       if (!event.repeat && (event.key.length === 1 || event.isComposing || event.key === 'Process')) {
         strokes.current.push(performance.now());
@@ -51,7 +53,11 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
       }
     }
     function up(event: KeyboardEvent) { setHeld(previous => { const next = new Set(previous); next.delete(event.code); return next; }); }
-    function clear() { setHeld(new Set()); strokes.current = []; energyRef.current = 0; setEnergy(0); setTier(0); renderer.current?.clear(); }
+    function clear() { focused.current = false; setHeld(new Set()); setFlash(null); strokes.current = []; energyRef.current = 0; setEnergy(0); setTier(0); renderer.current?.clear(); }
+    function leaveInput(event: FocusEvent) {
+      // Tab 到说明或设置也要停止动态反馈，不能只监听整个窗口失焦。
+      if (event.target instanceof HTMLTextAreaElement && event.target.classList.contains('typing-input')) clear();
+    }
     const timer = setInterval(() => {
       const next = typingEnergy(strokes.current, performance.now());
       strokes.current = next.recent; energyRef.current = next.energy;
@@ -59,14 +65,17 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
     }, 120);
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('blur', clear);
     document.addEventListener('visibilitychange', clear);
-    return () => { clearInterval(timer); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear); document.removeEventListener('visibilitychange', clear); };
+    document.addEventListener('focusout', leaveInput);
+    return () => { clearInterval(timer); window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('blur', clear); document.removeEventListener('visibilitychange', clear); document.removeEventListener('focusout', leaveInput); };
   }, [active]);
   useEffect(() => {
-    setFlash(feedback);
-    if (feedback) burst(feedback.code, !feedback.ok);
+    // 已排队的输入反馈不能在失焦清场后重新点亮旧键或启动粒子。
+    const current = active && focused.current ? feedback : null;
+    setFlash(current);
+    if (current) burst(current.code, !current.ok);
     const timer = setTimeout(() => setFlash(null), 220);
     return () => clearTimeout(timer);
-  }, [feedback]);
+  }, [feedback, active]);
 
   return <div className="keyboard-panel" data-tier={effects && !reduced ? tier : 0}>
     <div className="keyboard-caption"><span className="energy-title">{['键盘', '节奏', '疾速', '超频'][effects && !reduced ? tier : 0]}</span>

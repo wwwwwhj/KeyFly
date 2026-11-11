@@ -90,13 +90,32 @@ async (page) => {
   const hasPixels = () => page.locator('canvas').evaluate(el => el.getContext('2d').getImageData(0, 0, el.width, el.height).data.some((value, i) => i % 4 === 3 && value > 0));
   check(await hasPixels(), 'speed particles did not render');
   await page.screenshot({ path: 'output/playwright/focus-fast.png' });
+  await page.keyboard.press('Tab');
+  await page.locator('.keyboard-panel[data-tier="0"]').waitFor();
+  check(!await hasPixels(), 'leaving input kept particles moving');
+  check(await page.locator('.keyboard-key.held, .keyboard-key.correct, .keyboard-key.error').count() === 0, 'leaving input kept a stale key state');
+  await input.focus();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  check(!await hasPixels(), 'focus alone replayed old particles');
+  await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
+  await page.waitForFunction(() => {
+    const canvas = document.querySelector('canvas');
+    return canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, i) => i % 4 === 3 && value > 0);
+  });
+  // input 产生反馈后立即失焦，排队中的 React effect 也不能重新启动旧效果。
+  await input.evaluate(el => el.addEventListener('input', () => document.querySelector('.practice-settings summary').focus(), { once: true }));
+  await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
+  await page.locator('.keyboard-panel[data-tier="0"]').waitFor();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  check(!await hasPixels() && await page.locator('.keyboard-key.correct, .keyboard-key.error').count() === 0, 'queued feedback replayed after focus left input');
   await page.getByText('显示与练习说明', { exact: true }).click();
   await page.getByRole('checkbox', { name: '速度特效', exact: true }).uncheck();
+  await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
   check(!await hasPixels(), 'disabling effects left moving particles');
   await page.getByRole('checkbox', { name: '速度特效', exact: true }).check();
   await page.getByRole('checkbox', { name: '显示屏幕键盘', exact: true }).uncheck();
   check(await page.locator('.keyboard-panel').count() === 0, 'hide keyboard failed');
-  await input.pressSequentially(nextTarget[50]);
+  await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
   await page.evaluate(() => { window.__waves = []; });
   await page.getByRole('checkbox', { name: '显示屏幕键盘', exact: true }).check();
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
