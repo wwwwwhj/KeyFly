@@ -10,6 +10,14 @@
 
 本轮未扩展或测试移动端，未上传真实社区 sandbox；真实输入法与低端设备帧率仍需现场验证。
 
+## 2026-11-12 · 官方 SDK 0.3.0
+
+- 固定上游 ae0b523297a8c25314304f2cd92270badc0ac629，22 个 SDK 文件逐一通过 Git blob SHA 校验，package-lock.json 同步 0.3.0。
+- npm run package 通过，app.zip 为 84,317 字节；ZIP 根目录严格为五个规定文件，权限仍为 user.read、theme.read、storage.read、storage.write。
+- tests/production.check.js 通过：加载实际生产 IIFE，禁止原生 localStorage，模拟 SDK 用户、主题订阅、生命周期、账号分键存储、30 秒截止且不重复保存、访客及存储拒绝降级，无页面异常。
+- 首次计时探针在应用挂载后才安装虚拟时钟，未接管既有 interval；调整为挂载前安装并等待渲染及保存后，用新浏览器重试通过。
+- 新版可选网络、媒体、设备、通知等能力与当前打字主流程无直接必要关系，未额外接入或申请权限。真实社区 sandbox 尚未验证。
+
 ## 早期验收
 
 日期：2026-11-06。环境：Windows 11 / Node 24.19.0 / Vite 7.3.7 / Playwright Chromium。

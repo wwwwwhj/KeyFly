@@ -5,6 +5,8 @@ export interface PlatformIdentity {
     readonly aud: string;
     /** Use the issuer and subject together as the community account identity. */
     readonly sub: string;
+    /** Community trust level (0–4) at issuance; absent in tokens from older issuers. */
+    readonly trust_level?: number;
     readonly app_id: string;
     readonly version: string;
     readonly channel: "production" | "sandbox";
@@ -56,5 +58,8 @@ export declare class PlatformAuthError extends Error {
 }
 /** Verifies a reusable endpoint token; the developer still authorizes access to business resources. */
 export declare function verifyPlatformRequest(options: PlatformRequestOptions): Promise<PlatformIdentity>;
-/** Verifies the sole query token against the upgrade URL, without using cookies or headers. */
+/**
+ * Verifies the sole query token against the upgrade URL, without using cookies or headers.
+ * JWT expiry limits the handshake; an established connection need not close when it expires.
+ */
 export declare function verifyPlatformWebSocketRequest(options: PlatformWebSocketRequestOptions): Promise<PlatformIdentity>;

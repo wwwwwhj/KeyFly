@@ -34,7 +34,9 @@ npm run package    # 类型检查、Vite 构建、官方 SDK 打包
 
 桌面浏览器回归使用已安装的 Playwright CLI：打开开发地址后运行 `playwright-cli run-code --filename tests/desktop.check.js`。覆盖光波次数与对错颜色、真实选区编辑、暂停恢复、速度分级、设置、桌面布局、深色与减少动态效果；截图写入 output/playwright/。
 
-官方示例推荐 Bun 1.4.3+；本项目使用 Node 24 与 npm，SDK 打包器使用标准 Node API。依赖由 package-lock.json 固定，官方 SDK 源码与类型保存在 vendor/sdk。
+打包后运行 `playwright-cli run-code --filename tests/production.check.js`，验证实际生产 IIFE 的 SDK 用户、主题、存储、生命周期、截止计时与权限降级；此项使用模拟 SDK，不替代社区沙箱验收。
+
+官方示例推荐 Bun 1.4.3+；本项目使用 Node 24 与 npm，SDK 打包器使用标准 Node API。依赖由 package-lock.json 固定，官方 SDK 0.3.0 源码与类型保存在 vendor/sdk，并固定上游提交；不额外申请新版设备、网络或通知权限。
 
 ## 上传社区
 
