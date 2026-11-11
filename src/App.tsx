@@ -14,6 +14,10 @@ export function App({ user }: { user: User | null }) {
   const historyRef = useRef<Result[]>([]);
   const queue = useRef(Promise.resolve());
   const key = `history.${user?.id ?? 'guest'}`;
+  function saveHistory(records: Result[]) {
+    queue.current = queue.current.then(() => writeStorage(key, JSON.stringify(records)))
+      .catch(() => setStorageError('记录保存失败。本次成绩仍在页面中；请检查浏览器存储权限后再练习。'));
+  }
   useEffect(() => {
     // 原生模态框负责焦点约束、Esc 关闭和关闭后的焦点恢复。
     if (panel) dialog.current?.showModal();
@@ -28,10 +32,13 @@ export function App({ user }: { user: User | null }) {
       const records = parseHistory(raw);
       if (active) {
         // 读取期间完成的成绩不能被旧数据覆盖。
+        const pending = historyRef.current.length > 0;
         const merged = [...historyRef.current, ...records].slice(0, 20);
         historyRef.current = merged;
         setHistory(merged);
         loaded.current = true;
+        // 这些新成绩此前因读取未完成而暂缓写入，合并成功后必须补存。
+        if (pending) saveHistory(merged);
       }
     }).catch(() => { if (active) setStorageError('无法读取已存记录。本次成绩仍可查看，但不会覆盖原有记录。'); });
     return () => { active = false; };
@@ -46,10 +53,7 @@ export function App({ user }: { user: User | null }) {
     const next = [item, ...historyRef.current].slice(0, 20);
     historyRef.current = next;
     setHistory(next);
-    if (loaded.current) {
-      queue.current = queue.current.then(() => writeStorage(key, JSON.stringify(next)))
-        .catch(() => setStorageError('记录保存失败。本次成绩仍在页面中；请检查浏览器存储权限后再练习。'));
-    }
+    if (loaded.current) saveHistory(next);
   }
   const records = panel === 'ranking' ? rankedHistory(history, 'en', duration) : history;
   const username = user?.username || user?.name || '访客';

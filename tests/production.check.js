@@ -11,7 +11,11 @@ async (page) => {
   await page.addInitScript(() => {
     if (!location.pathname.startsWith('/keyfly-production-check')) return;
     const guest = location.search.includes('guest');
-    window.__records = {};
+    const params = new URLSearchParams(location.search), slowRead = params.has('slow-read');
+    const saved = params.get('saved');
+    const old = JSON.stringify([{ at: 1, language: 'en', seconds: 30, duration: 30, cpm: 20, wpm: 4, accuracy: 80, mode: 'practice' }]);
+    window.__records = saved ? { 'history.42': saved } : slowRead ? { 'history.42': old } : {};
+    window.__writes = [];
     window.__ready = false;
     window.miniApp = {
       ready: Promise.resolve(),
@@ -19,7 +23,17 @@ async (page) => {
       lifecycle: { ready: async () => { window.__ready = !!document.querySelector('textarea'); } },
       user: { getCurrent: async () => ({ id: 42, username: 'sdk-tester', name: '测试用户', avatarUrl: null }) },
       theme: { get: async () => ({ mode: 'dark', reducedMotion: false }), onChange: callback => { window.__theme = callback; return () => {}; } },
-      localStorage: { getItem: async key => window.__records[key] ?? null, setItem: async (key, value) => { window.__records[key] = value; } },
+      localStorage: {
+        getItem: key => {
+          const value = window.__records[key] ?? null;
+          // 让读取保持未完成，直到练习结束后再明确释放或拒绝。
+          return slowRead ? new Promise((resolve, reject) => {
+            window.__finishRead = () => resolve(value);
+            window.__rejectRead = () => reject(new Error('Simulated storage read failure'));
+          }) : Promise.resolve(value);
+        },
+        setItem: async (key, value) => { window.__writes.push({ key, value }); window.__records[key] = value; },
+      },
     };
     // 生产包必须通过 SDK 读写，禁止本地开发分支悄悄落到原生存储。
     Object.defineProperty(window, 'localStorage', { get() { throw new Error('Native storage forbidden'); } });
@@ -29,6 +43,16 @@ async (page) => {
     await page.addStyleTag({ url: `${base}/keyfly-production-assets/app.css` });
     await page.addScriptTag({ url: `${base}/keyfly-production-assets/app.js` });
     await page.waitForFunction(() => window.__ready);
+  }
+  async function finishWhileReading() {
+    await page.waitForFunction(() => typeof window.__finishRead === 'function');
+    await page.getByRole('button', { name: '30 秒', exact: true }).click();
+    const input = page.getByRole('textbox');
+    const target = await input.getAttribute('aria-description');
+    await input.pressSequentially(target[0]);
+    await page.clock.fastForward(31000);
+    await page.getByRole('heading', { name: '时间到，休息一下。' }).waitFor();
+    check(await page.evaluate(() => window.__writes.length) === 0, 'pending read allowed an unsafe overwrite');
   }
   // 先安装时钟再挂载应用，确保练习的 interval 也受同一虚拟时钟控制。
   await page.clock.install();
@@ -47,6 +71,8 @@ async (page) => {
   await page.keyboard.press('Shift+ArrowRight');
   await page.keyboard.press(`Shift+${first}`);
   check(await page.locator('.metrics strong').nth(1).textContent() === '60%', 'production same-value replacement was ignored');
+  // 同值替换后光标停在词首，先回到已输入末尾，不能要求未来空格显示提示。
+  await page.keyboard.press('End');
   const space = page.locator(`[data-position="${target.indexOf(' ')}"]`);
   check(await space.textContent() === ' ' && await space.evaluate(el => getComputedStyle(el, '::after').content.includes('·')), 'production space cue changed text or did not render');
   await page.clock.fastForward(1000);
@@ -64,6 +90,26 @@ async (page) => {
   check(await page.locator('html').getAttribute('data-theme') === 'light', 'theme subscription failed');
   check(await page.locator('html').getAttribute('data-motion') === 'reduced', 'platform motion preference missing');
   await page.clock.resume();
+  await load('?slow-read');
+  await finishWhileReading();
+  await page.evaluate(() => window.__finishRead());
+  await page.getByRole('button', { name: '练习记录', exact: true }).click();
+  await page.getByRole('dialog', { name: '练习记录' }).waitFor();
+  await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 2);
+  const stored = await page.evaluate(() => window.__records['history.42']);
+  const merged = JSON.parse(stored);
+  check(await page.evaluate(() => window.__writes.length) === 1 && merged.length === 2 && merged[0].at > 1 && merged[1].at === 1, 'result completed during read was not saved with old history');
+  // 用实际写入的快照重新启动，验证读取链路能恢复刚补写的两条记录。
+  await load(`?saved=${encodeURIComponent(stored)}`);
+  await page.getByRole('button', { name: '练习记录', exact: true }).click();
+  await page.getByRole('dialog', { name: '练习记录' }).waitFor();
+  await page.waitForFunction(() => document.querySelectorAll('tbody tr').length === 2);
+  check(await page.evaluate(() => window.__writes.length) === 0, 'loading saved records rewrote history unnecessarily');
+  await load('?slow-read');
+  await finishWhileReading();
+  await page.evaluate(() => window.__rejectRead());
+  await page.getByRole('alert').waitFor();
+  check(await page.evaluate(() => window.__writes.length === 0 && JSON.parse(window.__records['history.42'])[0].at === 1), 'failed read overwrote the original history');
   await load('?guest');
   await page.getByRole('alert').waitFor();
   check(await page.getByText('访客', { exact: true }).isVisible(), 'guest fallback missing');
