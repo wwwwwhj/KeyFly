@@ -88,8 +88,21 @@ async (page) => {
   await input.pressSequentially(nextTarget.slice(0, 50), { delay: 12 });
   check(await page.locator('.keyboard-panel').getAttribute('data-tier') === '3', 'fast input did not reach highest tier');
   const hasPixels = () => page.locator('canvas').evaluate(el => el.getContext('2d').getImageData(0, 0, el.width, el.height).data.some((value, i) => i % 4 === 3 && value > 0));
+  const waitForPixels = () => page.waitForFunction(() => {
+    const canvas = document.querySelector('canvas');
+    return canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, i) => i % 4 === 3 && value > 0);
+  });
   check(await hasPixels(), 'speed particles did not render');
   await page.screenshot({ path: 'output/playwright/focus-fast.png' });
+  // 有限地模拟一次主线程卡顿，恢复后的第一帧不应保留早已到期的反馈。
+  await page.evaluate(() => {
+    const until = performance.now() + 1000;
+    while (performance.now() < until) { /* 不输入新字符，保持真实时钟继续走。 */ }
+  });
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  check(!await hasPixels(), 'expired particles survived a one-second frame gap');
+  await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
+  await waitForPixels();
   await page.keyboard.press('Tab');
   await page.locator('.keyboard-panel[data-tier="0"]').waitFor();
   check(!await hasPixels(), 'leaving input kept particles moving');
@@ -98,10 +111,7 @@ async (page) => {
   await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
   check(!await hasPixels(), 'focus alone replayed old particles');
   await input.pressSequentially(nextTarget[(await input.inputValue()).length]);
-  await page.waitForFunction(() => {
-    const canvas = document.querySelector('canvas');
-    return canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, i) => i % 4 === 3 && value > 0);
-  });
+  await waitForPixels();
   // input 产生反馈后立即失焦，排队中的 React effect 也不能重新启动旧效果。
   await input.evaluate(el => el.addEventListener('input', () => document.querySelector('.practice-settings summary').focus(), { once: true }));
   await input.pressSequentially(nextTarget[(await input.inputValue()).length]);

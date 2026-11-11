@@ -49,6 +49,8 @@ async (page) => {
   check(await page.locator('.metrics strong').nth(1).textContent() === '60%', 'production same-value replacement was ignored');
   const space = page.locator(`[data-position="${target.indexOf(' ')}"]`);
   check(await space.textContent() === ' ' && await space.evaluate(el => getComputedStyle(el, '::after').content.includes('·')), 'production space cue changed text or did not render');
+  await page.clock.fastForward(1000);
+  check(await page.locator('canvas').evaluate(el => el.getContext('2d').getImageData(0, 0, el.width, el.height).data.every((value, i) => i % 4 !== 3 || value === 0)), 'production particles outlived their real-time deadline');
   await page.clock.fastForward(31000);
   await page.getByRole('heading', { name: '时间到，休息一下。' }).waitFor();
   check(await page.getByRole('textbox').isDisabled(), 'deadline did not lock input');

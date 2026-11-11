@@ -1,5 +1,5 @@
-interface Particle { x: number; y: number; vx: number; vy: number; life: number; maxLife: number; size: number; color: string }
-interface Wave { x: number; y: number; life: number; maxLife: number; radius: number; color: string }
+interface Particle { x: number; y: number; vx: number; vy: number; expiresAt: number; maxLife: number; size: number; color: string }
+interface Wave { x: number; y: number; expiresAt: number; maxLife: number; radius: number; color: string }
 
 // Canvas 只画真实击键产生的粒子；输入、分数和焦点始终由原生输入框处理。
 export function createKeyboardEffects(canvas: HTMLCanvasElement) {
@@ -19,18 +19,18 @@ export function createKeyboardEffects(canvas: HTMLCanvasElement) {
     if (!context || disposed) return;
     const dt = Math.min(32, previous ? now - previous : 16); previous = now;
     context.clearRect(0, 0, width, height);
-    particles = particles.filter(p => p.life > 0);
+    // 寿命按真实时钟到期，卡顿不会拉长旧反馈；只有位移使用受限步长。
+    particles = particles.filter(p => p.expiresAt > now);
     for (const p of particles) {
-      p.life -= dt; p.x += p.vx * dt / 16; p.y += p.vy * dt / 16;
+      p.x += p.vx * dt / 16; p.y += p.vy * dt / 16;
       p.vy += .055 * dt / 16; p.vx *= .985;
-      context.globalAlpha = Math.max(0, p.life / p.maxLife);
+      context.globalAlpha = Math.min(1, (p.expiresAt - now) / p.maxLife);
       context.strokeStyle = p.color; context.lineWidth = p.size;
       context.beginPath(); context.moveTo(p.x, p.y); context.lineTo(p.x - p.vx * 2, p.y - p.vy * 2); context.stroke();
     }
-    waves = waves.filter(w => w.life > 0);
+    waves = waves.filter(w => w.expiresAt > now);
     for (const w of waves) {
-      w.life -= dt;
-      const progress = 1 - w.life / w.maxLife;
+      const progress = Math.max(0, 1 - (w.expiresAt - now) / w.maxLife);
       context.globalAlpha = Math.max(0, (1 - progress) * .65);
       context.strokeStyle = w.color; context.lineWidth = 1.5;
       context.shadowColor = w.color; context.shadowBlur = w.radius > 70 ? 7 : 0;
@@ -48,14 +48,15 @@ export function createKeyboardEffects(canvas: HTMLCanvasElement) {
   return {
     burst(x: number, y: number, energy: number, color: string, error = false) {
       if (!context || disposed) return;
+      const now = performance.now();
       const count = error ? 7 : 5 + Math.round(energy * 22);
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
         const speed = (1 + Math.random() * 2) * (1 + energy * 2.4);
         const life = 240 + Math.random() * 220 + energy * 200;
-        particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1, life, maxLife: life, size: 1 + Math.random() * energy, color });
+        particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed - 1, expiresAt: now + life, maxLife: life, size: 1 + Math.random() * energy, color });
       }
-      waves.push({ x, y, life: 380, maxLife: 380, radius: 20 + energy * 90, color });
+      waves.push({ x, y, expiresAt: now + 380, maxLife: 380, radius: 20 + energy * 90, color });
       // 连续高速输入也限制内存与每帧绘制量，不让视觉效果反过来拖慢打字。
       particles = particles.slice(-180); waves = waves.slice(-12);
       if (!frame) frame = requestAnimationFrame(draw);
