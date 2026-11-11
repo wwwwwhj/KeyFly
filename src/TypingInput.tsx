@@ -1,9 +1,9 @@
 import { memo, useRef, useState, useEffect, useLayoutEffect, useId, useMemo } from 'react';
 import type { PointerEvent } from 'react';
 import type { KeyFeedback } from './keyboard-layout';
-import { countInput } from './typing';
+import { countInput, type InputRange } from './typing';
 import { passageSegments } from './content';
-interface Props { target: string; translations?: readonly string[]; value: string; disabled?: boolean; onChange: (value: string) => void; onCaretChange: (position: number) => void; onBegin?: () => void; onFeedback?: (feedback: KeyFeedback) => void }
+interface Props { target: string; translations?: readonly string[]; value: string; disabled?: boolean; onChange: (value: string, range?: InputRange) => void; onCaretChange: (position: number) => void; onBegin?: () => void; onFeedback?: (feedback: KeyFeedback) => void }
 export const TypingInput = memo(function TypingInput({ target, translations, value, disabled = false, onChange, onCaretChange, onBegin, onFeedback }: Props) {
   const [draft, setDraft] = useState(value);
   const [selection, setSelection] = useState({ start: Array.from(value).length, end: Array.from(value).length, caret: Array.from(value).length });
@@ -16,8 +16,29 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
   const viewport = useRef<HTMLDivElement>(null);
   const active = useRef<HTMLSpanElement>(null);
   const lastCode = useRef('');
+  const committed = useRef(value);
+  const pendingEdit = useRef<(InputRange & { value: string }) | undefined>(undefined);
   const sequence = useRef(0);
-  useEffect(() => { if (!composing.current || disabled) setDraft(value); }, [value, disabled]);
+  useEffect(() => {
+    if (!composing.current || disabled) { setDraft(value); committed.current = value; }
+    if (disabled) { composing.current = false; pendingEdit.current = undefined; lastCode.current = ''; }
+  }, [value, disabled]);
+  function captureEdit(element: HTMLTextAreaElement) {
+    return { value: element.value,
+      start: Array.from(element.value.slice(0, element.selectionStart)).length,
+      end: Array.from(element.value.slice(0, element.selectionEnd)).length };
+  }
+  useEffect(() => {
+    const element = input.current;
+    if (!element) return;
+    // 使用原生 beforeinput，在浏览器改动值和选区前捕获位置；组合输入沿用开始时的范围。
+    function beforeInput(event: InputEvent) {
+      if (event.inputType === 'insertFromPaste' || event.inputType === 'insertFromDrop') { event.preventDefault(); pendingEdit.current = undefined; return; }
+      if (!composing.current) pendingEdit.current = event.inputType.startsWith('insert') ? captureEdit(element!) : undefined;
+    }
+    element.addEventListener('beforeinput', beforeInput);
+    return () => element.removeEventListener('beforeinput', beforeInput);
+  }, []);
   useEffect(() => {
     // 从暂停恢复后把焦点还给输入区，继续击键不会误触“继续练习”按钮。
     if (wasDisabled.current && !disabled) input.current?.focus({ preventScroll: true });
@@ -82,10 +103,31 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
   }
   function endSelection() { dragAnchor.current = null; setSelecting(false); }
   function commit(element: HTMLTextAreaElement) {
-    const next = Array.from(element.value).slice(0, targetLength).join('');
-    const count = countInput(value, next, target, { attempts: 0, mistakes: 0 });
+    const previous = committed.current, edit = pendingEdit.current;
+    pendingEdit.current = undefined;
+    const range = edit?.value === previous ? edit : undefined;
+    const raw = Array.from(element.value);
+    let next = raw.slice(0, targetLength).join('');
+    if (range) {
+      const before = Array.from(previous);
+      const insertedLength = Math.max(0, raw.length - before.length + range.end - range.start);
+      const available = targetLength - before.length + range.end - range.start;
+      const inserted = raw.slice(range.start, range.start + insertedLength).slice(0, available).join('');
+      // 达到上限时只限制新插入的字符，不能截掉用户尚未选中的尾部文字。
+      next = before.slice(0, range.start).join('') + inserted + before.slice(range.end).join('');
+      if (next !== element.value) {
+        element.value = next;
+        const position = before.slice(0, range.start).join('').length + inserted.length;
+        element.setSelectionRange(position, position);
+      }
+    }
+    const count = countInput(previous, next, target, { attempts: 0, mistakes: 0 }, range);
+    // 部分浏览器在 compositionend 后还会派发同值 input；一次提交只能计数一次。
+    if (next === previous && !count.attempts) { setDraft(next); lastCode.current = ''; updateSelection(element); return; }
+    committed.current = next;
     if (count.attempts && lastCode.current) onFeedback?.({ code: lastCode.current, ok: count.mistakes === 0, sequence: ++sequence.current });
-    setDraft(next); onChange(next); updateSelection(element);
+    lastCode.current = '';
+    setDraft(next); onChange(next, range); updateSelection(element);
   }
   return <><div className="typing-surface">
     <div ref={viewport} className="passage" aria-hidden="true"><div className="passage-track">{segments.map(segment =>
@@ -96,17 +138,24 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
           return <span key={i} data-position={i} ref={i === caret ? active : undefined} className={[i < typed.length ? (char === typed[i] ? 'char-correct' : 'char-error') : '', i === caret ? 'char-caret' : '', i >= selection.start && i < selection.end ? 'char-selected' : ''].filter(Boolean).join(' ')}>{char}</span>;
         })}</span>
       </span>)}<span className="passage-word"><span className="word-translation" /><span className="word-letters"><span data-position={targetLength} ref={caret === targetLength ? active : undefined} className={caret === targetLength ? 'char-caret' : ''} /></span></span></div></div>
-    <textarea ref={input} className="typing-input" aria-label="英文打字练习" aria-description={target} aria-describedby={translations?.length ? translationsId : undefined} value={draft} disabled={disabled}
+    {/* 与单行题面一致，避免 Home/End 停在透明输入框里不可见的自动折行。 */}
+    <textarea ref={input} className="typing-input" wrap="off" aria-label="英文打字练习" aria-description={target} aria-describedby={translations?.length ? translationsId : undefined} value={draft} disabled={disabled}
       autoComplete="off" autoCorrect="off" autoCapitalize="off" spellCheck={false}
-      onKeyDown={e => { lastCode.current = e.code; }}
+      onKeyDown={e => { lastCode.current = e.ctrlKey || e.metaKey || e.altKey ? '' : e.code; }}
       onSelect={e => updateSelection(e.currentTarget)}
       onPointerDown={startSelection} onPointerMove={moveSelection}
       onPointerUp={endSelection} onPointerCancel={endSelection} onLostPointerCapture={endSelection}
       onPaste={e => e.preventDefault()} onDrop={e => e.preventDefault()}
-      onBeforeInput={e => { const input = e.nativeEvent as InputEvent; if (input.inputType === 'insertFromPaste' || input.inputType === 'insertFromDrop') e.preventDefault(); }}
-      onCompositionStart={() => { composing.current = true; onBegin?.(); }}
-      onCompositionEnd={e => { composing.current = false; if (disabled) { setDraft(value); return; } commit(e.currentTarget); }}
-      onChange={e => { setDraft(e.target.value); if (!composing.current && !(e.nativeEvent as InputEvent).isComposing) commit(e.currentTarget); }} />
+      onCompositionStart={e => { pendingEdit.current = captureEdit(e.currentTarget); composing.current = true; onBegin?.(); }}
+      onCompositionEnd={e => {
+        composing.current = false;
+        if (disabled) { setDraft(value); return; }
+        // Esc 取消组合会恢复原选区，不能把恢复的旧文字当成一次同值重输。
+        if (!e.data && e.currentTarget.value === committed.current) pendingEdit.current = undefined;
+        commit(e.currentTarget);
+      }}
+      // 同值替换也有真实击键；onInput 不会像 onChange 一样被 React 的值比较过滤。
+      onInput={e => { setDraft(e.currentTarget.value); if (!composing.current && !(e.nativeEvent as InputEvent).isComposing) commit(e.currentTarget); }} />
   </div><p className="typing-hint">点击文字开始输入</p>
     {translations?.length ? <p id={translationsId} className="sr-only">单词释义：{segments.filter(segment => segment.translation).map(segment => `${segment.text}：${segment.translation}`).join('；')}</p> : null}
   </>;

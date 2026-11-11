@@ -37,6 +37,14 @@ test('截止时间不被后台轮询延迟放大，暂停不累加', () => {
   assert.equal(elapsedAt(1000, 5000, 100000, 60000), 60000);
   assert.equal(elapsedAt(null, 5000, 100000, 60000), 5000);
 });
+test('重复字符按真实替换范围计分，相同内容重输仍算一次尝试', () => {
+  const counts = { attempts: 3, mistakes: 2 }, target = 'A little';
+  assert.deepEqual(countInput('AAA', 'AAAA', target, counts, { start: 0, end: 0 }), { attempts: 4, mistakes: 2 });
+  assert.deepEqual(countInput('AAA', 'AAAA', target, counts, { start: 3, end: 3 }), { attempts: 4, mistakes: 3 });
+  assert.deepEqual(countInput('AAA', 'AAA', target, counts, { start: 0, end: 1 }), { attempts: 4, mistakes: 2 });
+  assert.deepEqual(countInput('😀😀', '😀😀😀', '😀ab', counts, { start: 0, end: 0 }), { attempts: 4, mistakes: 2 });
+  assert.deepEqual(countInput('AAA', 'AA', target, counts, { start: 0, end: 1 }), counts);
+});
 test('键位提示支持对侧 Shift，热度随速度升级并在停止后衰减', () => {
   assert.deepEqual(hintCodes('A'), ['KeyA', 'ShiftRight']);
   assert.deepEqual(hintCodes('?'), ['Slash', 'ShiftLeft']);

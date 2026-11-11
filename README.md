@@ -28,7 +28,7 @@ npm run dev
 打开 http://127.0.0.1:5173 。本地开发使用浏览器存储，不伪造社区用户。正式构建会移除本地存储分支，只调用社区 SDK。
 
 ```powershell
-npm test           # 5 项核心规则回归
+npm test           # 6 项核心规则回归
 npm run check      # TypeScript 检查
 npm run package    # 类型检查、Vite 构建、官方 SDK 打包
 ```
@@ -36,6 +36,8 @@ npm run package    # 类型检查、Vite 构建、官方 SDK 打包
 桌面浏览器回归使用已安装的 Playwright CLI：打开开发地址后运行 `playwright-cli run-code --filename tests/desktop.check.js`。覆盖光波次数与对错颜色、真实选区编辑、暂停恢复、速度分级、设置、桌面布局、深色与减少动态效果；截图写入 output/playwright/。
 
 打包后运行 `playwright-cli run-code --filename tests/production.check.js`，验证实际生产 IIFE 的 SDK 用户、主题、存储、生命周期、截止计时与权限降级；此项使用模拟 SDK，不替代社区沙箱验收。
+
+编辑范围与重复字符专项为 tests/feedback.check.js，覆盖真实插入位置、同值替换、长度上限和组合输入；当前浏览器完整验收状态见 docs/verification.md，不能以单元测试通过代替该验收。
 
 官方示例推荐 Bun 1.4.3+；本项目使用 Node 24 与 npm，SDK 打包器使用标准 Node API。依赖由 package-lock.json 固定，官方 SDK 0.3.0 源码与类型保存在 vendor/sdk，并固定上游提交；不额外申请新版设备、网络或通知权限。
 
