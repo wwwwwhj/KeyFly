@@ -35,9 +35,9 @@ npm run package    # 类型检查、Vite 构建、官方 SDK 打包
 
 桌面浏览器回归使用已安装的 Playwright CLI：打开开发地址后运行 `playwright-cli run-code --filename tests/desktop.check.js`。覆盖光波次数与对错颜色、真实选区编辑、暂停恢复、速度分级、设置、桌面布局、深色与减少动态效果；截图写入 output/playwright/。
 
-打包后运行 `playwright-cli run-code --filename tests/production.check.js`，验证实际生产 IIFE 的 SDK 用户、主题、存储、生命周期、截止计时与权限降级；此项使用模拟 SDK，不替代社区沙箱验收。
+打包后运行 `playwright-cli run-code --filename tests/production.check.js`，直接读取本次构建文件，验证生产 IIFE 的 SDK 用户、主题、存储、生命周期、编辑范围计分、截止计时与权限降级；此项使用模拟 SDK，不替代社区沙箱验收。
 
-编辑范围与重复字符专项为 tests/feedback.check.js，覆盖真实插入位置、同值替换、长度上限和组合输入；当前浏览器完整验收状态见 docs/verification.md，不能以单元测试通过代替该验收。
+编辑范围与重复字符专项为 tests/feedback.check.js，覆盖真实插入位置、同值替换、Home/End、长度上限、组合输入和长按重复键；浏览器完整验收状态见 docs/verification.md，不能以单元测试通过代替该验收。
 
 官方示例推荐 Bun 1.4.3+；本项目使用 Node 24 与 npm，SDK 打包器使用标准 Node API。依赖由 package-lock.json 固定，官方 SDK 0.3.0 源码与类型保存在 vendor/sdk，并固定上游提交；不额外申请新版设备、网络或通知权限。
 
@@ -54,6 +54,8 @@ npm run package    # 类型检查、Vite 构建、官方 SDK 打包
 ## 规则
 
 英文 WPM = 当前正确字符数 / 用时分钟数 / 5。准确率按累计输入尝试计算，退格修正不会抹除原错误。全文完全正确才提前完成；计时模式到点结束。粘贴和拖入文字被禁用。
+
+重复字符按真实编辑位置判错；选中文字后重输同值仍记一次尝试，取消输入法组合不计尝试。达到输入长度上限时保留未选中的尾部，可继续通过选区纠错。
 
 键盘热度取最近 2.4 秒的实体击键密度，长按自动重复不增加热度；它只控制视觉效果，不参与成绩计算。粒子最多 180 个、光波最多 12 个，画布像素比上限 2；停止输入后衰减，隐藏或关闭时取消动画。
 

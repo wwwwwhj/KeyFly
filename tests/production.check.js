@@ -5,6 +5,9 @@ async (page) => {
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   await page.route('**/keyfly-production-check*', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><html><head><meta charset="UTF-8"><link rel="icon" href="data:,"></head><body><div id="root"></div></body></html>' }));
+  // 直接读取本次构建，避免开发服务器对 dist 的转换缓存让验收误用旧 bundle。
+  await page.route('**/keyfly-production-assets/app.js', route => route.fulfill({ path: 'dist/web/app.js', contentType: 'application/javascript' }));
+  await page.route('**/keyfly-production-assets/app.css', route => route.fulfill({ path: 'dist/web/app.css', contentType: 'text/css' }));
   await page.addInitScript(() => {
     if (!location.pathname.startsWith('/keyfly-production-check')) return;
     const guest = location.search.includes('guest');
@@ -23,8 +26,8 @@ async (page) => {
   });
   async function load(suffix = '') {
     await page.goto(`${base}/keyfly-production-check${suffix}`);
-    await page.addStyleTag({ url: `${base}/dist/web/app.css` });
-    await page.addScriptTag({ url: `${base}/dist/web/app.js` });
+    await page.addStyleTag({ url: `${base}/keyfly-production-assets/app.css` });
+    await page.addScriptTag({ url: `${base}/keyfly-production-assets/app.js` });
     await page.waitForFunction(() => window.__ready);
   }
   // 先安装时钟再挂载应用，确保练习的 interval 也受同一虚拟时钟控制。
@@ -33,13 +36,24 @@ async (page) => {
   check(await page.getByText('sdk-tester', { exact: true }).isVisible(), 'SDK username missing');
   check(await page.locator('html').getAttribute('data-theme') === 'dark', 'SDK theme missing');
   await page.getByRole('button', { name: '30 秒', exact: true }).click();
-  await page.getByRole('textbox').pressSequentially('A');
+  const input = page.getByRole('textbox');
+  check(await input.getAttribute('wrap') === 'off', 'production check did not load the current single-line input');
+  const target = await input.getAttribute('aria-description'), first = target[0];
+  await input.pressSequentially(first.repeat(3));
+  await page.keyboard.press('Home');
+  await page.keyboard.press(`Shift+${first}`);
+  check(await page.locator('.metrics strong').nth(1).textContent() === '50%', 'production insertion lost its true edit range');
+  await page.keyboard.press('Home');
+  await page.keyboard.press('Shift+ArrowRight');
+  await page.keyboard.press(`Shift+${first}`);
+  check(await page.locator('.metrics strong').nth(1).textContent() === '60%', 'production same-value replacement was ignored');
   await page.clock.fastForward(31000);
   await page.getByRole('heading', { name: '时间到，休息一下。' }).waitFor();
   check(await page.getByRole('textbox').isDisabled(), 'deadline did not lock input');
   await page.waitForFunction(() => !!window.__records['history.42']);
   const records = await page.evaluate(() => JSON.parse(window.__records['history.42']));
   check(records.length === 1 && records[0].seconds === 30, 'result saved twice or exceeded deadline');
+  check(records[0].accuracy === 60, 'saved result disagrees with live input feedback');
   await page.clock.fastForward(10000);
   check(await page.evaluate(() => JSON.parse(window.__records['history.42']).length) === 1, 'finished timer saved duplicate results');
   await page.evaluate(() => window.__theme({ mode: 'light', reducedMotion: true }));

@@ -34,6 +34,10 @@ async (page) => {
   const full = 'A'.repeat(Array.from(target).length - 1) + 'Z';
   await input.fill(full);
   await page.keyboard.press('Home');
+  check(await input.evaluate(el => el.selectionStart === 0 && el.selectionEnd === 0), 'Home stopped at an invisible wrapped line');
+  await page.keyboard.press('End');
+  check(await input.evaluate(el => el.selectionStart === el.value.length), 'End stopped before the actual end');
+  await page.keyboard.press('Home');
   await page.keyboard.press('x');
   check(await input.inputValue() === full, 'inserting at the limit deleted an unselected tail');
   await page.keyboard.press('Shift+ArrowRight');
@@ -58,5 +62,15 @@ async (page) => {
   await page.keyboard.press('Delete');
   await page.keyboard.press('Shift+A');
   check(await accuracy() === '33%', 'composition commit was counted more than once');
+  await page.goto(base);
+  await input.focus();
+  await page.keyboard.down('a');
+  try {
+    for (let i = 0; i < 15; i++) await page.keyboard.down('a');
+    check(await input.inputValue() === 'a'.repeat(16), 'held-key input was lost or duplicated');
+    check(await accuracy() === '6%', 'held-key attempts disagree with accepted characters');
+    check(await page.locator('.heat-meter').getAttribute('aria-label') === '敲击热度 4%', 'automatic repeats inflated typing heat');
+  } finally { await page.keyboard.up('a'); }
+  check(await page.locator('.keyboard-key.held').count() === 0, 'released repeat key stayed pressed');
   await page.goto(base);
 }
