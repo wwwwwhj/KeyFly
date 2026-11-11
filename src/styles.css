@@ -40,6 +40,10 @@ select, input { color: var(--ink); background: var(--tint); border: 0; border-ra
 .char-caret { position: relative; }
 .char-caret:before { content: ''; position: absolute; top: 0; bottom: 0; left: -2px; width: 2px; background: var(--accent); }
 .char-selected { background: var(--tint); }
+/* 只标记当前或错误空格，伪元素不改变原文、选区和字符测量。 */
+[data-space] { position: relative; }
+[data-space].char-caret:after, [data-space].char-error:after { content: '·'; position: absolute; inset: 0; text-align: center; color: var(--accent); }
+[data-space].char-error:after { color: var(--error); }
 .typing-surface:focus-within .char-caret:before { animation: caret 1.2s steps(2, jump-none) infinite; }
 @keyframes caret { 50% { opacity: .25; } }
 .typing-input { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; resize: none; opacity: 0; cursor: text; }

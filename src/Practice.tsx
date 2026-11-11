@@ -89,7 +89,7 @@ export function Practice({ onResult, active = true }: { onResult: (result: Resul
         setFeedback(null); setShowKeyboard(e.target.checked);
       }} />显示屏幕键盘</label><label><input type="checkbox" checked={effects} onChange={e => setEffects(e.target.checked)} />速度特效</label></div>
       <p>首次输入开始计时，切到后台自动暂停。Backspace 修正，方向键移动光标。</p>
-      <p>键帽描边提示下一键；绿色表示正确，红色表示错误。WPM = 每分钟正确字符 ÷ 5。</p>
+      <p>键帽描边提示下一键；绿色表示正确，红色表示错误。题面圆点提示当前或输错的空格。WPM = 每分钟正确字符 ÷ 5。</p>
     </details>
   </section>;
 }

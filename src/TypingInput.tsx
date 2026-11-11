@@ -135,7 +135,7 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
         <span className="word-translation" lang="zh-CN">{segment.translation}</span>
         <span className="word-letters" lang="en">{Array.from(segment.text).map((char, offset) => {
           const i = segment.start + offset;
-          return <span key={i} data-position={i} ref={i === caret ? active : undefined} className={[i < typed.length ? (char === typed[i] ? 'char-correct' : 'char-error') : '', i === caret ? 'char-caret' : '', i >= selection.start && i < selection.end ? 'char-selected' : ''].filter(Boolean).join(' ')}>{char}</span>;
+          return <span key={i} data-position={i} data-space={char === ' ' ? true : undefined} ref={i === caret ? active : undefined} className={[i < typed.length ? (char === typed[i] ? 'char-correct' : 'char-error') : '', i === caret ? 'char-caret' : '', i >= selection.start && i < selection.end ? 'char-selected' : ''].filter(Boolean).join(' ')}>{char}</span>;
         })}</span>
       </span>)}<span className="passage-word"><span className="word-translation" /><span className="word-letters"><span data-position={targetLength} ref={caret === targetLength ? active : undefined} className={caret === targetLength ? 'char-caret' : ''} /></span></span></div></div>
     {/* 与单行题面一致，避免 Home/End 停在透明输入框里不可见的自动折行。 */}

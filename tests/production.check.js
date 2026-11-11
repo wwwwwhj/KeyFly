@@ -47,6 +47,8 @@ async (page) => {
   await page.keyboard.press('Shift+ArrowRight');
   await page.keyboard.press(`Shift+${first}`);
   check(await page.locator('.metrics strong').nth(1).textContent() === '60%', 'production same-value replacement was ignored');
+  const space = page.locator(`[data-position="${target.indexOf(' ')}"]`);
+  check(await space.textContent() === ' ' && await space.evaluate(el => getComputedStyle(el, '::after').content.includes('·')), 'production space cue changed text or did not render');
   await page.clock.fastForward(31000);
   await page.getByRole('heading', { name: '时间到，休息一下。' }).waitFor();
   check(await page.getByRole('textbox').isDisabled(), 'deadline did not lock input');

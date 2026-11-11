@@ -28,6 +28,36 @@ async (page) => {
   });
   check(await accuracy() === '60%', 'cancelled composition counted restored selection as new input');
 
+  // 空格标记仅参与绘制，不能进入原文、输入值或计分，也不能改变字符宽度。
+  await page.setViewportSize({ width: 1440, height: 900 });
+  for (const theme of ['light', 'dark']) {
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'no-preference' });
+    await page.goto(base);
+    await input.pressSequentially('A');
+    const space = page.locator('[data-position="1"]');
+    const width = await space.evaluate(el => el.getBoundingClientRect().width);
+    check(await space.textContent() === ' ' && await space.getAttribute('data-space') === 'true', 'space cue replaced the real target character');
+    check(await space.evaluate(el => getComputedStyle(el, '::after').content.includes('·')), 'current space is not visible');
+    const original = await input.getAttribute('aria-description');
+    check((await page.locator('.word-letters').allTextContents()).join('') === original, 'visual cue changed passage text');
+    await page.locator('.typing-surface').screenshot({ path: `output/playwright/space-current-${theme}.png`, animations: 'disabled' });
+    await page.keyboard.press('x');
+    check(await space.evaluate(el => el.classList.contains('char-error') && getComputedStyle(el, '::after').color === getComputedStyle(el).color), 'wrong space cue lost its error color');
+    check(await space.evaluate(el => el.getBoundingClientRect().width) === width, 'space cue changed character geometry');
+    await page.locator('.typing-surface').screenshot({ path: `output/playwright/space-error-${theme}.png`, animations: 'disabled' });
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Space');
+    check(await input.inputValue() === 'A ' && await accuracy() === '67%', 'space correction changed input or historical accuracy');
+    check(await space.evaluate(el => getComputedStyle(el, '::after').content) === 'none', 'completed space kept a decorative cue');
+    const period = original.indexOf('.');
+    await input.fill(original.slice(0, period));
+    check(await page.locator('.char-caret').textContent() === '.', 'punctuation caret did not match target');
+    check(await page.locator('[data-code="Period"]').evaluate(el => el.classList.contains('next')), 'punctuation key hint did not match target');
+    await page.keyboard.press('.');
+    check(await input.inputValue() === original.slice(0, period + 1) && await page.locator('.char-caret').getAttribute('data-space') === 'true', 'cross-sentence space cue lost its position');
+  }
+  await page.emulateMedia({ colorScheme: 'light', reducedMotion: 'no-preference' });
+
   // 满长度时插入不得截掉尾部，但选区替换仍可继续纠错。
   await page.goto(base);
   const target = await input.getAttribute('aria-description');
