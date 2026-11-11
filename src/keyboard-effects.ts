@@ -5,18 +5,21 @@ interface Wave { x: number; y: number; expiresAt: number; maxLife: number; radiu
 export function createKeyboardEffects(canvas: HTMLCanvasElement) {
   const context = canvas.getContext('2d');
   let particles: Particle[] = [], waves: Wave[] = [];
-  let frame = 0, previous = 0, width = 0, height = 0;
+  let frame = 0, previous = 0, width = 0, height = 0, density = 0;
   let disposed = false;
   const resize = () => {
     const rect = canvas.getBoundingClientRect();
     width = rect.width; height = rect.height;
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    density = dpr;
     canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
     context?.setTransform(dpr, 0, 0, dpr, 0, 0);
   };
   const observer = new ResizeObserver(resize); observer.observe(canvas); resize();
   function draw(now: number) {
     if (!context || disposed) return;
+    // 跨屏时 CSS 尺寸可能不变；绘制前校准密度，空闲时不额外轮询。
+    if (density !== Math.min(window.devicePixelRatio || 1, 2)) resize();
     const dt = Math.min(32, previous ? now - previous : 16); previous = now;
     context.clearRect(0, 0, width, height);
     // 寿命按真实时钟到期，卡顿不会拉长旧反馈；只有位移使用受限步长。

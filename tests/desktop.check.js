@@ -146,6 +146,26 @@ async (page) => {
     check(layout.keyboardBottom <= height, `keyboard below fold at ${width}x${height}`);
     if (width === 1280) await page.screenshot({ path: 'output/playwright/focus-compact.png' });
   }
+  // 保持桌面 CSS 视口不变，只改变显示密度；连续变化也必须校准，且像素预算仍封顶。
+  const densitySession = await page.context().newCDPSession(page);
+  try {
+    for (const deviceScaleFactor of [1, 2, 3, 1.25, 1]) {
+      await densitySession.send('Emulation.setDeviceMetricsOverride', { width: 1920, height: 1080, deviceScaleFactor, mobile: false });
+      const current = await input.getAttribute('aria-description');
+      await input.pressSequentially(current[(await input.inputValue()).length]);
+      await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas'), rect = canvas.getBoundingClientRect();
+        const scale = Math.min(devicePixelRatio, 2);
+        return canvas.width === Math.round(rect.width * scale) && canvas.height === Math.round(rect.height * scale) && canvas.getContext('2d').getTransform().a === scale;
+      });
+      await waitForPixels();
+      check(await input.evaluate(el => el.selectionStart) === Number(await page.locator('.char-caret').getAttribute('data-position')), 'density change displaced the visible caret');
+      if (deviceScaleFactor === 2) await page.locator('.keyboard-panel').screenshot({ path: 'output/playwright/keyboard-density-2.png' });
+    }
+  } finally {
+    await densitySession.send('Emulation.clearDeviceMetricsOverride');
+    await densitySession.detach();
+  }
   await page.emulateMedia({ colorScheme: 'dark', reducedMotion: 'reduce' });
   await page.reload();
   await input.pressSequentially(target.slice(0, 40), { delay: 8 });

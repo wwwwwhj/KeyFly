@@ -81,6 +81,20 @@ async (page) => {
   await page.keyboard.press('Control+z');
   await page.keyboard.press('Control+Shift+z');
   check(await input.inputValue() === `${first}x` && await page.locator('.metrics strong').nth(1).textContent() === '50%', 'production redo recounted typing');
+  const densitySession = await page.context().newCDPSession(page);
+  try {
+    for (const deviceScaleFactor of [2, 3, 1.25, 1]) {
+      await densitySession.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor, mobile: false });
+      await input.pressSequentially('x');
+      await page.waitForFunction(() => {
+        const canvas = document.querySelector('canvas'), rect = canvas.getBoundingClientRect();
+        return canvas.width === Math.round(rect.width * Math.min(devicePixelRatio, 2));
+      });
+    }
+  } finally {
+    await densitySession.send('Emulation.clearDeviceMetricsOverride');
+    await densitySession.detach();
+  }
   await load();
   await page.getByRole('button', { name: '30 秒', exact: true }).click();
   // 切换时长会重新抽题，后续断言必须使用新题面。
