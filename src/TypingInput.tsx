@@ -5,7 +5,7 @@ import { passageSegments } from './content';
 interface Props { target: string; translations?: readonly string[]; value: string; disabled?: boolean; onChange: (value: string) => void; onCaretChange: (position: number) => void; onBegin?: () => void; onFeedback?: (feedback: KeyFeedback) => void }
 export const TypingInput = memo(function TypingInput({ target, translations, value, disabled = false, onChange, onCaretChange, onBegin, onFeedback }: Props) {
   const [draft, setDraft] = useState(value);
-  const [selection, setSelection] = useState({ start: Array.from(value).length, end: Array.from(value).length });
+  const [selection, setSelection] = useState({ start: Array.from(value).length, end: Array.from(value).length, caret: Array.from(value).length });
   const translationsId = useId();
   const composing = useRef(false);
   const input = useRef<HTMLTextAreaElement>(null);
@@ -26,7 +26,7 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
     // 只移动题面，不滚动整页；两端留白使首字和末尾光标也能保持居中。
     container.scrollLeft += caret.getBoundingClientRect().left - container.getBoundingClientRect().left - container.clientWidth / 2;
   }
-  useLayoutEffect(centerActiveCharacter, [value, target, translations, selection.start]);
+  useLayoutEffect(centerActiveCharacter, [value, target, translations, selection.caret]);
   useEffect(() => {
     const observer = new ResizeObserver(centerActiveCharacter);
     if (viewport.current) observer.observe(viewport.current);
@@ -35,13 +35,15 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
   const typed = Array.from(value);
   const segments = useMemo(() => passageSegments(target, translations), [target, translations]);
   const targetLength = useMemo(() => Array.from(target).length, [target]);
-  const caret = Math.min(selection.start, typed.length);
+  const caret = Math.min(selection.caret, typed.length);
   function updateSelection(element: HTMLTextAreaElement) {
     // DOM 选区使用 UTF-16 偏移，题面与计分使用字符索引，避免非 BMP 字符让提示错位。
     const start = Array.from(element.value.slice(0, element.selectionStart)).length;
     const end = Array.from(element.value.slice(0, element.selectionEnd)).length;
-    setSelection(previous => previous.start === start && previous.end === end ? previous : { start, end });
-    onCaretChange(start);
+    // 选区起点用于高亮范围，活动端才是 Shift + 方向键正在移动的真实光标。
+    const position = element.selectionDirection === 'forward' ? end : start;
+    setSelection(previous => previous.start === start && previous.end === end && previous.caret === position ? previous : { start, end, caret: position });
+    onCaretChange(position);
   }
   function commit(element: HTMLTextAreaElement) {
     const next = Array.from(element.value).slice(0, targetLength).join('');

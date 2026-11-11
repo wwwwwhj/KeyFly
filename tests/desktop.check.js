@@ -41,6 +41,12 @@ async (page) => {
   check(await page.locator(`[data-code="${firstCode}"]`).evaluate(el => el.classList.contains('next')), 'key hint did not follow caret');
   await page.keyboard.press('Shift+ArrowRight');
   check(await page.locator('.char-selected').count() === 1, 'native selection is invisible');
+  check(await page.locator('.char-caret').textContent() === target[1], 'forward selection caret did not follow active end');
+  await page.keyboard.press('Shift+ArrowLeft');
+  check(await page.locator('.char-caret').textContent() === target[0], 'collapsed selection caret did not return');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('Shift+ArrowLeft');
+  check(await page.locator('.char-selected').count() === 1 && await page.locator('.char-caret').textContent() === target[0], 'backward selection did not follow active start');
   await page.keyboard.press(wrong);
   check(await input.inputValue() === wrong + target.slice(1, 8), 'selection replacement appended instead');
   await page.keyboard.press('Home');
@@ -48,9 +54,11 @@ async (page) => {
   await page.keyboard.insertText(target[0]);
   check(await input.inputValue() === target.slice(0, 8), 'middle correction lost trailing input');
   await page.getByRole('button', { name: '练习记录', exact: true }).click();
+  await page.locator('.status-paused').waitFor();
   check(await page.locator('.status').textContent() === '已暂停', 'records did not pause practice');
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '继续练习' }).click();
+  await page.waitForFunction(() => document.activeElement?.classList.contains('typing-input'));
   check(await input.evaluate(el => el === document.activeElement), 'resume did not restore typing focus');
 
   await page.getByRole('button', { name: '换一篇并重新开始' }).click();
@@ -63,10 +71,15 @@ async (page) => {
   await page.getByText('显示与练习说明', { exact: true }).click();
   await page.getByRole('checkbox', { name: '速度特效', exact: true }).uncheck();
   check(!await hasPixels(), 'disabling effects left moving particles');
+  await page.getByRole('checkbox', { name: '速度特效', exact: true }).check();
   await page.getByRole('checkbox', { name: '显示屏幕键盘', exact: true }).uncheck();
   check(await page.locator('.keyboard-panel').count() === 0, 'hide keyboard failed');
+  await input.pressSequentially(nextTarget[50]);
+  await page.evaluate(() => { window.__waves = []; });
   await page.getByRole('checkbox', { name: '显示屏幕键盘', exact: true }).check();
-  await page.getByRole('checkbox', { name: '速度特效', exact: true }).check();
+  await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
+  check(await page.locator('.keyboard-key.correct, .keyboard-key.error').count() === 0, 'remount replayed stale key flash');
+  check(await page.evaluate(() => window.__waves.length) === 0, 'remount replayed stale particles');
   await page.getByText('显示与练习说明', { exact: true }).click();
 
   for (const [width, height] of [[1280, 720], [1920, 1080]]) {

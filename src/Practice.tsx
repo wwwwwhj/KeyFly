@@ -84,7 +84,10 @@ export function Practice({ onResult, active = true }: { onResult: (result: Resul
     </div>
     {showKeyboard && <Keyboard key={session} nextChar={status === 'done' ? '' : Array.from(passage.text)[caret] ?? ''} feedback={feedback} active={active && status !== 'paused' && status !== 'done'} effects={effects} />}
     <details className="practice-settings"><summary>显示与练习说明</summary>
-      <div className="keyboard-switch"><label><input type="checkbox" checked={showKeyboard} onChange={e => setShowKeyboard(e.target.checked)} />显示屏幕键盘</label><label><input type="checkbox" checked={effects} onChange={e => setEffects(e.target.checked)} />速度特效</label></div>
+      <div className="keyboard-switch"><label><input type="checkbox" checked={showKeyboard} onChange={e => {
+        // 隐藏期间仍可打字，重挂载时不能把最后一次输入当成新击键播放。
+        setFeedback(null); setShowKeyboard(e.target.checked);
+      }} />显示屏幕键盘</label><label><input type="checkbox" checked={effects} onChange={e => setEffects(e.target.checked)} />速度特效</label></div>
       <p>首次输入开始计时，切到后台自动暂停。Backspace 修正，方向键移动光标。</p>
       <p>键帽描边提示下一键；绿色表示正确，红色表示错误。WPM = 每分钟正确字符 ÷ 5。</p>
     </details>
