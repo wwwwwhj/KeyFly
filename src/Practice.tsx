@@ -60,11 +60,11 @@ export function Practice({ onResult, active = true }: { onResult: (result: Resul
     clock.current.started = performance.now(); setStatus('running');
   }, [status]);
   // 稳定输入回调，使每 100ms 的计时更新不会重绘题面和释义。
-  const change = useCallback((next: string, range?: InputRange) => {
+  const change = useCallback((next: string, range?: InputRange, inputType?: string) => {
     if (clock.current.done || status === 'paused') return;
     if (limit && time() >= limit * 1000) { finish(); return; }
     if (next === value && !range) return;
-    begin(); const updated = countInput(value, next, passage.text, counts, range);
+    begin(); const updated = countInput(value, next, passage.text, counts, range, inputType);
     setValue(next); setCounts(updated);
     if (next === passage.text) finish(next, updated);
   }, [status, limit, time, finish, value, begin, passage, counts]);

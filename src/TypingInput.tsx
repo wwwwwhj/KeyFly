@@ -3,7 +3,7 @@ import type { PointerEvent } from 'react';
 import type { KeyFeedback } from './keyboard-layout';
 import { countInput, type InputRange } from './typing';
 import { passageSegments } from './content';
-interface Props { target: string; translations?: readonly string[]; value: string; disabled?: boolean; onChange: (value: string, range?: InputRange) => void; onCaretChange: (position: number) => void; onBegin?: () => void; onFeedback?: (feedback: KeyFeedback) => void }
+interface Props { target: string; translations?: readonly string[]; value: string; disabled?: boolean; onChange: (value: string, range?: InputRange, inputType?: string) => void; onCaretChange: (position: number) => void; onBegin?: () => void; onFeedback?: (feedback: KeyFeedback) => void }
 export const TypingInput = memo(function TypingInput({ target, translations, value, disabled = false, onChange, onCaretChange, onBegin, onFeedback }: Props) {
   const [draft, setDraft] = useState(value);
   const [selection, setSelection] = useState({ start: Array.from(value).length, end: Array.from(value).length, caret: Array.from(value).length });
@@ -102,7 +102,7 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
     if (dragAnchor.current !== null) selectRange(dragAnchor.current, pointerPosition(event.clientX));
   }
   function endSelection() { dragAnchor.current = null; setSelecting(false); }
-  function commit(element: HTMLTextAreaElement) {
+  function commit(element: HTMLTextAreaElement, inputType?: string) {
     const previous = committed.current, edit = pendingEdit.current;
     pendingEdit.current = undefined;
     const range = edit?.value === previous ? edit : undefined;
@@ -121,13 +121,13 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
         element.setSelectionRange(position, position);
       }
     }
-    const count = countInput(previous, next, target, { attempts: 0, mistakes: 0 }, range);
+    const count = countInput(previous, next, target, { attempts: 0, mistakes: 0 }, range, inputType);
     // 部分浏览器在 compositionend 后还会派发同值 input；一次提交只能计数一次。
     if (next === previous && !count.attempts) { setDraft(next); lastCode.current = ''; updateSelection(element); return; }
     committed.current = next;
     if (count.attempts && lastCode.current) onFeedback?.({ code: lastCode.current, ok: count.mistakes === 0, sequence: ++sequence.current });
     lastCode.current = '';
-    setDraft(next); onChange(next, range); updateSelection(element);
+    setDraft(next); onChange(next, range, inputType); updateSelection(element);
   }
   return <><div className="typing-surface">
     <div ref={viewport} className="passage" aria-hidden="true"><div className="passage-track">{segments.map(segment =>
@@ -155,7 +155,7 @@ export const TypingInput = memo(function TypingInput({ target, translations, val
         commit(e.currentTarget);
       }}
       // 同值替换也有真实击键；onInput 不会像 onChange 一样被 React 的值比较过滤。
-      onInput={e => { setDraft(e.currentTarget.value); if (!composing.current && !(e.nativeEvent as InputEvent).isComposing) commit(e.currentTarget); }} />
+      onInput={e => { const event = e.nativeEvent as InputEvent; setDraft(e.currentTarget.value); if (!composing.current && !event.isComposing) commit(e.currentTarget, event.inputType); }} />
   </div><p className="typing-hint">点击文字开始输入</p>
     {translations?.length ? <p id={translationsId} className="sr-only">单词释义：{segments.filter(segment => segment.translation).map(segment => `${segment.text}：${segment.translation}`).join('；')}</p> : null}
   </>;

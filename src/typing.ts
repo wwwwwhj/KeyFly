@@ -1,7 +1,9 @@
 export interface Counts { attempts: number; mistakes: number }
 // 范围使用字符索引，与计分一致；DOM 的 UTF-16 偏移在输入边界转换。
 export interface InputRange { start: number; end: number }
-export function countInput(previous: string, next: string, target: string, counts: Counts, range?: InputRange): Counts {
+export function countInput(previous: string, next: string, target: string, counts: Counts, range?: InputRange, inputType?: string): Counts {
+  // 撤销/重做只恢复已有编辑；不能把恢复的字符当成新击键，也不能抹除历史错误。
+  if (inputType === 'historyUndo' || inputType === 'historyRedo') return counts;
   const before = Array.from(previous), after = Array.from(next), expected = Array.from(target);
   let prefix = range?.start ?? 0, suffix = range ? before.length - range.end : 0;
   // 相同字符的插入位置不能从字符串差异推断；优先使用原生 beforeinput 的替换范围。

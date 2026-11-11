@@ -73,7 +73,18 @@ async (page) => {
   check(await input.inputValue() === '', 'production Caps Lock event modified the input');
   await capsState(false);
   await page.locator('[data-code="ShiftRight"].next').waitFor();
-  const target = await input.getAttribute('aria-description'), first = target[0];
+  let target = await input.getAttribute('aria-description'), first = target[0];
+  await input.pressSequentially(`${first}x`);
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Control+z');
+  check(await input.inputValue() === `${first}x` && await page.locator('.metrics strong').nth(1).textContent() === '50%', 'production undo recounted the restored mistake');
+  await page.keyboard.press('Control+z');
+  await page.keyboard.press('Control+Shift+z');
+  check(await input.inputValue() === `${first}x` && await page.locator('.metrics strong').nth(1).textContent() === '50%', 'production redo recounted typing');
+  await load();
+  await page.getByRole('button', { name: '30 秒', exact: true }).click();
+  // 切换时长会重新抽题，后续断言必须使用新题面。
+  target = await input.getAttribute('aria-description'); first = target[0];
   await input.pressSequentially(first.repeat(3));
   await page.keyboard.press('Home');
   await page.keyboard.press(`Shift+${first}`);

@@ -44,6 +44,10 @@ test('重复字符按真实替换范围计分，相同内容重输仍算一次�
   assert.deepEqual(countInput('AAA', 'AAA', target, counts, { start: 0, end: 1 }), { attempts: 4, mistakes: 2 });
   assert.deepEqual(countInput('😀😀', '😀😀😀', '😀ab', counts, { start: 0, end: 0 }), { attempts: 4, mistakes: 2 });
   assert.deepEqual(countInput('AAA', 'AA', target, counts, { start: 0, end: 1 }), counts);
+  for (const inputType of ['historyUndo', 'historyRedo']) {
+    assert.deepEqual(countInput('A', 'Ax', target, counts, undefined, inputType), counts);
+    assert.deepEqual(countInput('Ax', 'A', target, counts, undefined, inputType), counts);
+  }
 });
 test('键位提示支持对侧 Shift 和大写锁定，热度随速度升级并在停止后衰减', () => {
   assert.deepEqual(hintCodes('A'), ['KeyA', 'ShiftRight']);

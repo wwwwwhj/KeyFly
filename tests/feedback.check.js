@@ -4,6 +4,24 @@ async (page) => {
   const base = new URL(page.url()).origin;
   const input = page.getByRole('textbox', { name: '英文打字练习' });
   const accuracy = () => page.locator('.metrics strong').nth(1).textContent();
+  // 原生编辑历史恢复文字和光标，但不是新的输入尝试。
+  await page.goto(base);
+  await input.pressSequentially('Ax');
+  check(await accuracy() === '50%', 'history fixture did not record its original mistake');
+  await page.keyboard.press('Backspace');
+  for (const key of ['Control+z', 'Control+Shift+z', 'Control+z']) {
+    await page.keyboard.press(key);
+    check(await input.inputValue() === (key === 'Control+Shift+z' ? 'A' : 'Ax'), 'native undo/redo did not restore its edit');
+    check(await accuracy() === '50%', 'native undo/redo recounted restored characters');
+    check(await input.evaluate(el => el.selectionStart) === Number(await page.locator('.char-caret').getAttribute('data-position')), 'history restore lost the visible caret');
+  }
+  await page.keyboard.press('Control+z');
+  check(await input.inputValue() === '' && await accuracy() === '50%', 'undo typing erased historical attempts');
+  await page.keyboard.press('Control+Shift+z');
+  check(await input.inputValue() === 'Ax' && await accuracy() === '50%', 'redo typing counted the same attempts twice');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press('Space');
+  check(await input.inputValue() === 'A ' && await accuracy() === '67%', 'new input after history restore did not keep its original mistake');
   await page.goto(base);
   async function capsState(locator, enabled) {
     await locator.evaluate((el, enabled) => {
@@ -126,4 +144,5 @@ async (page) => {
   } finally { await page.keyboard.up('a'); }
   check(await page.locator('.keyboard-key.held').count() === 0, 'released repeat key stayed pressed');
   await page.goto(base);
+  return 'feedback checks passed';
 }
