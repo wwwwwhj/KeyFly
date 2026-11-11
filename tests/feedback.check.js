@@ -5,6 +5,29 @@ async (page) => {
   const input = page.getByRole('textbox', { name: '英文打字练习' });
   const accuracy = () => page.locator('.metrics strong').nth(1).textContent();
   await page.goto(base);
+  async function capsState(locator, enabled) {
+    await locator.evaluate((el, enabled) => {
+      for (const type of ['keydown', 'keyup']) el.dispatchEvent(new KeyboardEvent(type, { bubbles: true, key: 'CapsLock', code: 'CapsLock', modifierCapsLock: enabled }));
+    }, enabled);
+  }
+  await input.focus();
+  await capsState(input, true);
+  await page.waitForFunction(() => !document.querySelector('[data-code="ShiftRight"]').classList.contains('next'));
+  check(await input.inputValue() === '' && await page.locator('.heat-meter').getAttribute('aria-label') === '敲击热度 0%', 'Caps Lock changed input or typing heat');
+  await page.goto(base);
+  await input.fill('A ');
+  await capsState(input, true);
+  await page.locator('[data-code="KeyL"].next').waitFor();
+  await page.locator('[data-code="ShiftLeft"].next').waitFor();
+  await page.locator('.keyboard-panel').screenshot({ path: 'output/playwright/caps-lowercase.png' });
+  await page.getByText('显示与练习说明', { exact: true }).click();
+  check(await page.locator('[data-code="ShiftLeft"]').evaluate(el => el.classList.contains('next')), 'leaving input forgot the known Caps Lock state');
+  await page.getByRole('button', { name: '练习记录', exact: true }).click();
+  await page.getByRole('dialog', { name: '练习记录' }).waitFor();
+  await capsState(page.getByRole('button', { name: '关闭弹窗' }), false);
+  await page.waitForFunction(() => !document.querySelector('[data-code="ShiftLeft"]').classList.contains('next'));
+  await page.keyboard.press('Escape');
+  await page.goto(base);
   await input.pressSequentially('AAA');
   await page.keyboard.press('Home');
   await page.keyboard.press('Shift+A');

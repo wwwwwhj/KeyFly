@@ -45,11 +45,17 @@ test('重复字符按真实替换范围计分，相同内容重输仍算一次�
   assert.deepEqual(countInput('😀😀', '😀😀😀', '😀ab', counts, { start: 0, end: 0 }), { attempts: 4, mistakes: 2 });
   assert.deepEqual(countInput('AAA', 'AA', target, counts, { start: 0, end: 1 }), counts);
 });
-test('键位提示支持对侧 Shift，热度随速度升级并在停止后衰减', () => {
+test('键位提示支持对侧 Shift 和大写锁定，热度随速度升级并在停止后衰减', () => {
   assert.deepEqual(hintCodes('A'), ['KeyA', 'ShiftRight']);
   assert.deepEqual(hintCodes('?'), ['Slash', 'ShiftLeft']);
   assert.deepEqual(hintCodes(' '), ['Space']);
   assert.deepEqual(hintCodes('中'), []);
+  assert.deepEqual(hintCodes('A', true), ['KeyA']);
+  assert.deepEqual(hintCodes('a', true), ['KeyA', 'ShiftRight']);
+  assert.deepEqual(hintCodes('j', true), ['KeyJ', 'ShiftLeft']);
+  assert.deepEqual(hintCodes('?', true), ['Slash', 'ShiftLeft']);
+  assert.deepEqual(hintCodes('1', true), ['Digit1']);
+  assert.deepEqual(hintCodes(' ', true), ['Space']);
   const strokes = Array.from({ length: 30 }, (_, i) => 1000 + i * 50);
   assert.equal(typingEnergy(strokes, 2500).tier, 3);
   assert.equal(typingEnergy(strokes, 2500).energy, 1);

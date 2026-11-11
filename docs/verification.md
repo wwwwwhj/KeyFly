@@ -1,5 +1,14 @@
 # 本地验收记录
 
+## 2026-11-12 · Caps Lock 与 Shift 提示
+
+- 已复现：DOM 键盘事件的 Caps Lock 为开启时，题面大写 A 仍错误提示 Shift。hintCodes 现在结合已知锁定状态计算字母所需的对侧 Shift，数字、标点和空格保持原规则，没有增加界面开关或状态栏。
+- 依据 [UI Events 的 KeyboardEvent 定义](https://github.com/w3c/uievents/blob/main/sections/event-keyboardevent.txt)，从 keydown/keyup 的 getModifierState 读取锁定状态；暂停与失焦不清空，之后的事件继续校准。首个键盘事件前使用默认未锁定状态，不声称读取到系统全局状态。
+- 6项单元测试、输入专项和完整桌面回归通过；新增大写免 Shift、小写对侧 Shift、标点/数字不变、零输入/零热度、失焦保留及暂停期间更新的断言。已查看 caps-lowercase.png。
+- 最新生产 IIFE 的锁定状态开关回归通过，既有计分、存储补写/恢复/读取失败保护、截止与权限降级均通过；类型检查、构建及打包通过。
+- app.zip 为85,319字节，根目录五文件且 JS/CSS 与验收产物一致。上游 pushed_at 仍为2026-11-11T12:02:20Z，无新 SDK 提交。
+- 锁定状态验收使用标准 DOM 修饰键事件；真实键盘、Windows 输入法与社区容器仍未现场验证，移动端未扩展。
+
 ## 2026-11-12 · 历史补写验收通过
 
 - 在新建的干净浏览器中运行完整 tests/production.check.js 通过；上一检查点的空格断言已按真实光标状态修正，没有要求未来空格提前显示。

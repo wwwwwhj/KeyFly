@@ -11,11 +11,14 @@ const punctuation: Record<string, string> = { '`': 'Backquote', '-': 'Minus', '=
 const shifted: Record<string, string> = { '~': '`', '!': '1', '@': '2', '#': '3', '$': '4', '%': '5', '^': '6', '&': '7', '*': '8', '(': '9', ')': '0', '_': '-', '+': '=', '{': '[', '}': ']', '|': '\\', ':': ';', '"': "'", '<': ',', '>': '.', '?': '/' };
 // 左手负责的键；提示 Shift 时点亮对侧的那只。
 const leftHand = new Set('`12345qwertasdfgzxcvb');
-export function hintCodes(char: string): string[] {
+export function hintCodes(char: string, capsLock = false): string[] {
   const base = shifted[char] ?? char.toLowerCase();
-  const code = /^[a-z]$/.test(base) ? `Key${base.toUpperCase()}` : /^\d$/.test(base) ? `Digit${base}` : punctuation[base];
+  const letter = /^[a-z]$/.test(base);
+  const code = letter ? `Key${base.toUpperCase()}` : /^\d$/.test(base) ? `Digit${base}` : punctuation[base];
   if (!code) return [];
-  return /^[A-Z]$/.test(char) || Object.hasOwn(shifted, char) ? [code, leftHand.has(base) ? 'ShiftRight' : 'ShiftLeft'] : [code];
+  // 大写锁定只反转字母的 Shift 需求，数字和标点仍按原有键位提示。
+  const needsShift = Object.hasOwn(shifted, char) || (letter && (/^[A-Z]$/.test(char) !== capsLock));
+  return needsShift ? [code, leftHand.has(base) ? 'ShiftRight' : 'ShiftLeft'] : [code];
 }
 export interface KeyFeedback { code: string; ok: boolean; sequence: number }
 export function typingEnergy(strokes: number[], now: number) {

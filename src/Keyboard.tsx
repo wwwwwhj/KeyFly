@@ -8,6 +8,7 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
   const [energy, setEnergy] = useState(0);
   const [tier, setTier] = useState(0);
   const [reduced, setReduced] = useState(false);
+  const [capsLock, setCapsLock] = useState(false);
   const strokes = useRef<number[]>([]);
   const stage = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -16,16 +17,19 @@ export const Keyboard = memo(function Keyboard({ nextChar, feedback, active, eff
   const focused = useRef(false);
   const canAnimate = useRef(false);
   canAnimate.current = effects && !reduced && active;
-  const hints = hintCodes(nextChar);
+  const hints = hintCodes(nextChar, capsLock);
 
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');
+    // 锁定状态属于设备，不随暂停或失焦清空；用后续键盘事件校准。
+    const modifiers = (event: KeyboardEvent) => setCapsLock(event.getModifierState('CapsLock'));
+    window.addEventListener('keydown', modifiers); window.addEventListener('keyup', modifiers);
     const update = () => setReduced(media.matches || document.documentElement.dataset.motion === 'reduced');
     const observer = new MutationObserver(update);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-motion'] });
     media.addEventListener('change', update); update();
     if (canvas.current) renderer.current = createKeyboardEffects(canvas.current);
-    return () => { observer.disconnect(); media.removeEventListener('change', update); renderer.current?.dispose(); };
+    return () => { observer.disconnect(); media.removeEventListener('change', update); window.removeEventListener('keydown', modifiers); window.removeEventListener('keyup', modifiers); renderer.current?.dispose(); };
   }, []);
   useEffect(() => { if (!canAnimate.current) renderer.current?.clear(); }, [effects, reduced, active]);
 

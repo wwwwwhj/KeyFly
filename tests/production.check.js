@@ -62,6 +62,17 @@ async (page) => {
   await page.getByRole('button', { name: '30 秒', exact: true }).click();
   const input = page.getByRole('textbox');
   check(await input.getAttribute('wrap') === 'off', 'production check did not load the current single-line input');
+  await input.focus();
+  async function capsState(enabled) {
+    await input.evaluate((el, enabled) => {
+      for (const type of ['keydown', 'keyup']) el.dispatchEvent(new KeyboardEvent(type, { bubbles: true, key: 'CapsLock', code: 'CapsLock', modifierCapsLock: enabled }));
+    }, enabled);
+  }
+  await capsState(true);
+  await page.waitForFunction(() => !document.querySelector('[data-code="ShiftRight"]').classList.contains('next'));
+  check(await input.inputValue() === '', 'production Caps Lock event modified the input');
+  await capsState(false);
+  await page.locator('[data-code="ShiftRight"].next').waitFor();
   const target = await input.getAttribute('aria-description'), first = target[0];
   await input.pressSequentially(first.repeat(3));
   await page.keyboard.press('Home');
